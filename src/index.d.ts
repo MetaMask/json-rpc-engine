@@ -1,3 +1,6 @@
+
+import { IJsonRpcError } from 'eth-json-rpc-errors'
+
 /** A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0". */
 export type JsonRpcVersion = "2.0";
 
@@ -39,12 +42,7 @@ interface JsonRpcFailure<T> extends JsonRpcResponse<T> {
     error: JsonRpcError<T>;
 }
 
-interface JsonRpcError<T> {
-  /** Must be an integer */
-  code: number;
-  message: string;
-  data?: T;
-}
+interface JsonRpcError<T> extends IJsonRpcError<T> {}
 
 type JsonRpcEngineEndCallback = (error?: JsonRpcError<any>) => void;
 type JsonRpcEngineNextCallback = (returnFlightCallback?: (done: () => void) => void) => void;
