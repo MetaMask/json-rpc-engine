@@ -15,6 +15,8 @@ export type JsonRpcReservedMethod = string;
  *  NOT contain fractional parts [2] */
 export type JsonRpcId = number | string | void;
 
+interface JsonRpcError<T> extends IJsonRpcError<T> {}
+
 interface JsonRpcRequest<T> {
   jsonrpc: JsonRpcVersion;
   method: string;
@@ -41,8 +43,6 @@ interface JsonRpcSuccess<T> extends JsonRpcResponse<T> {
 interface JsonRpcFailure<T> extends JsonRpcResponse<T> {
     error: JsonRpcError<T>;
 }
-
-interface JsonRpcError<T> extends IJsonRpcError<T> {}
 
 type JsonRpcEngineEndCallback = (error?: JsonRpcError<any>) => void;
 type JsonRpcEngineNextCallback = (returnFlightCallback?: (done: () => void) => void) => void;

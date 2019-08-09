@@ -1,7 +1,7 @@
 'use strict'
 const async = require('async')
 const SafeEventEmitter = require('safe-event-emitter')
-const serializeError = require('eth-json-rpc-errors').serializeError
+const { serializeError } = require('eth-json-rpc-errors')
 
 class RpcEngine extends SafeEventEmitter {
   constructor () {
