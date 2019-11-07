@@ -1,7 +1,7 @@
 'use strict'
 const async = require('async')
 const SafeEventEmitter = require('safe-event-emitter')
-const { serializeError } = require('eth-json-rpc-errors')
+const { serializeError, ethErrors } = require('eth-json-rpc-errors')
 
 class RpcEngine extends SafeEventEmitter {
   constructor () {
@@ -20,7 +20,7 @@ class RpcEngine extends SafeEventEmitter {
   handle (req, cb) {
     // batch request support
     if (Array.isArray(req)) {
-      async.map(req, this._handle.bind(this), cb)
+      this._handleBatch(req, cb)
     } else {
       this._handle(req, cb)
     }
@@ -29,6 +29,36 @@ class RpcEngine extends SafeEventEmitter {
   //
   // Private
   //
+
+  async _handleBatch (reqs, cb) {
+    const batchRes = []
+    for (const r of reqs) {
+      try {
+        let [err, res] = await this._promiseHandle(r)
+        if (!res) {
+          if (err) {
+            throw err
+          } else {
+            throw ethErrors.rpc.internal('Fatal: Internal request handler returned neither error nor response.')
+          }
+        } else {
+          batchRes.push(res)
+        }
+      } catch (_err) {
+        // some kind of fatal error
+        return cb(_err, null)
+      }
+    }
+    cb(null, batchRes)
+  }
+
+  _promiseHandle (req) {
+    return new Promise((resolve) => {
+      this._handle(req, (err, res) => {
+        resolve([err, res])
+      })
+    })
+  }
 
   _handle (_req, cb) {
     // shallow clone request object
