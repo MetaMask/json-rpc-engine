@@ -39,7 +39,7 @@ class RpcEngine extends SafeEventEmitter {
           if (err) {
             throw err
           } else {
-            throw ethErrors.rpc.internal('Fatal: Internal request handler returned neither error nor response.')
+            throw ethErrors.rpc.internal('JsonRpcEngine: Request handler returned neither error nor response.')
           }
         } else {
           batchRes.push(res)
@@ -96,12 +96,12 @@ class RpcEngine extends SafeEventEmitter {
       // fail if not completed
       if (!('result' in res) && !('error' in res)) {
         const requestBody = JSON.stringify(req, null, 2)
-        const message = 'JsonRpcEngine - response has no error or result for request:\n' + requestBody
+        const message = 'JsonRpcEngine: Response has no error or result for request:\n' + requestBody
         return cb(new Error(message))
       }
       if (!isComplete) {
         const requestBody = JSON.stringify(req, null, 2)
-        const message = 'JsonRpcEngine - nothing ended request:\n' + requestBody
+        const message = 'JsonRpcEngine: Nothing ended request:\n' + requestBody
         return cb(new Error(message))
       }
       // continue
