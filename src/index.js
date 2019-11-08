@@ -30,32 +30,56 @@ class RpcEngine extends SafeEventEmitter {
   // Private
   //
 
-  async _handleBatch (reqs, cb) {
-    const batchRes = []
-    for (const r of reqs) {
-      try {
-        let [err, res] = await this._promiseHandle(r)
-        if (!res) {
-          if (err) {
-            throw err
-          } else {
-            throw ethErrors.rpc.internal('JsonRpcEngine: Request handler returned neither error nor response.')
-          }
-        } else {
-          batchRes.push(res)
-        }
-      } catch (_err) {
-        // some kind of fatal error
-        return cb(_err, null)
+  _handleBatch (reqs, cb) {
+
+    let numRemaining = reqs.length // keep track of number of remaining requests
+    const batchRes = new Array(reqs.length).fill(null) // responses, in order
+
+    // wrap request sending in a promise that resolves when all requests have
+    // been handled
+    new Promise(() => {
+
+      for (let i = 0; i < batchRes.length; i++) {
+
+        // fire off all requests in sequence without waiting for resolution
+        // in this way, the receiver can handle them as an ordered batch
+        this._promiseHandle(reqs[i], i)
+          .then(([err, res, index]) => {
+
+            if (!res) { // this is bad
+
+              if (err) {
+                throw err
+              } else {
+                throw ethErrors.rpc.internal('JsonRpcEngine: Request handler returned neither error nor response.')
+              }
+            } else {
+
+              // add individual response in order to response array
+              batchRes[index] = res
+
+              // resolve if all requests handled
+              numRemaining--
+              if (numRemaining === 0) {
+                cb && cb(null, batchRes)
+                cb = null // should not be necessary, but nevertheless...
+              }
+            }
+          })
+          .catch(_err => {
+
+            // some kind of fatal error
+            cb && cb(_err, null)
+            cb = null // don't let anyone else call cb
+          })
       }
-    }
-    cb(null, batchRes)
+    })
   }
 
-  _promiseHandle (req) {
+  _promiseHandle (req, index) {
     return new Promise((resolve) => {
       this._handle(req, (err, res) => {
-        resolve([err, res])
+        resolve([err, res, index])
       })
     })
   }
