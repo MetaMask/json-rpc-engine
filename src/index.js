@@ -32,20 +32,22 @@ class RpcEngine extends SafeEventEmitter {
 
   async _handleBatch (reqs, cb) {
 
+    // The order here is important
     try {
-      const batchRes = await Promise.all(
+      const batchRes = await Promise.all( // 2. Wait for all requests to finish
+        // 1. Begin executing each request in the order received
         reqs.map(this._promiseHandle.bind(this))
       )
-      cb(null, batchRes)
+      cb(null, batchRes) // 3a. Return batch response
     } catch (err) {
-      cb(err)
+      cb(err) // 3b. Some kind of fatal error; all requests are lost
     }
   }
 
   _promiseHandle (req) {
     return new Promise((resolve, reject) => {
       this._handle(req, (err, res) => {
-        if (!res) {
+        if (!res) { // defensive programming
           reject(err || ethErrors.rpc.internal(
             'JsonRpcEngine: Request handler returned neither error nor response.'
           ))
