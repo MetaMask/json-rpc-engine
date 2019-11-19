@@ -35,45 +35,40 @@ class RpcEngine extends SafeEventEmitter {
     let numRemaining = reqs.length // keep track of number of remaining requests
     const batchRes = new Array(reqs.length).fill(null) // responses, in order
 
-    // wrap request sending in a promise that resolves when all requests have
-    // been handled
-    new Promise(() => {
+    // loop over requests
+    for (let i = 0; i < batchRes.length; i++) {
 
-      for (let i = 0; i < batchRes.length; i++) {
+      // fire off all requests in sequence without waiting for resolution
+      // in this way, the receiver can handle them as an ordered batch
+      this._promiseHandle(reqs[i], i)
+        .then(([err, res, index]) => {
 
-        // fire off all requests in sequence without waiting for resolution
-        // in this way, the receiver can handle them as an ordered batch
-        this._promiseHandle(reqs[i], i)
-          .then(([err, res, index]) => {
-
-            if (!res) { // this is bad
-
-              if (err) {
-                throw err
-              } else {
-                throw ethErrors.rpc.internal('JsonRpcEngine: Request handler returned neither error nor response.')
-              }
+          if (!res) { // this is bad
+            if (err) {
+              throw err
             } else {
-
-              // add individual response in order to response array
-              batchRes[index] = res
-
-              // resolve if all requests handled
-              numRemaining--
-              if (numRemaining === 0) {
-                cb && cb(null, batchRes)
-                cb = null // should not be necessary, but nevertheless...
-              }
+              throw ethErrors.rpc.internal('JsonRpcEngine: Request handler returned neither error nor response.')
             }
-          })
-          .catch(_err => {
+          } else {
 
-            // some kind of fatal error
-            cb && cb(_err, null)
-            cb = null // don't let anyone else call cb
-          })
-      }
-    })
+            // add individual response in order to response array
+            batchRes[index] = res
+
+            // call callback if all requests handled
+            numRemaining--
+            if (numRemaining === 0) {
+              cb && cb(null, batchRes)
+              cb = null // should not be necessary, but nevertheless...
+            }
+          }
+        })
+        .catch(_err => {
+
+          // some kind of fatal error
+          cb && cb(_err, null)
+          cb = null // don't let anyone else call cb
+        })
+    }
   }
 
   _promiseHandle (req, index) {
