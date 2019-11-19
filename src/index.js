@@ -1,7 +1,9 @@
 'use strict'
 const async = require('async')
 const SafeEventEmitter = require('safe-event-emitter')
-const { serializeError, ethErrors } = require('eth-json-rpc-errors')
+const {
+  serializeError, EthereumRpcError, ERROR_CODES
+} = require('eth-json-rpc-errors')
 
 class RpcEngine extends SafeEventEmitter {
   constructor () {
@@ -48,7 +50,8 @@ class RpcEngine extends SafeEventEmitter {
     return new Promise((resolve, reject) => {
       this._handle(req, (err, res) => {
         if (!res) { // defensive programming
-          reject(err || ethErrors.rpc.internal(
+          reject(err || new EthereumRpcError(
+            ERROR_CODES.rpc.internal,
             'JsonRpcEngine: Request handler returned neither error nor response.'
           ))
         } else {
@@ -95,12 +98,16 @@ class RpcEngine extends SafeEventEmitter {
       if (!('result' in res) && !('error' in res)) {
         const requestBody = JSON.stringify(req, null, 2)
         const message = 'JsonRpcEngine: Response has no error or result for request:\n' + requestBody
-        return cb(new Error(message))
+        return cb(new EthereumRpcError(
+          ERROR_CODES.rpc.internal, message, req
+        ))
       }
       if (!isComplete) {
         const requestBody = JSON.stringify(req, null, 2)
         const message = 'JsonRpcEngine: Nothing ended request:\n' + requestBody
-        return cb(new Error(message))
+        return cb(new EthereumRpcError(
+          ERROR_CODES.rpc.internal, message, req
+        ))
       }
       // continue
       return cb(null, returnHandlers)
