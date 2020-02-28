@@ -14,7 +14,6 @@
     "coverage": "nyc yarn test"
   },
   "dependencies": {
-    "@babel/runtime": "^7.8.4",
     "async": "^2.0.1",
     "eth-json-rpc-errors": "^2.0.1",
     "promise-to-callback": "^1.0.0",
@@ -25,6 +24,7 @@
     "@babel/core": "^7.8.6",
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/preset-env": "^7.8.6",
+    "@babel/runtime": "^7.8.4",
     "@metamask/eslint-config": "^2.1.0",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
