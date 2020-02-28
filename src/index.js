@@ -82,7 +82,7 @@ class RpcEngine extends SafeEventEmitter {
         return cb(responseError, res)
       }
       // return response
-      cb(err, res)
+      return cb(err, res)
     })
   }
 
@@ -133,6 +133,7 @@ class RpcEngine extends SafeEventEmitter {
       }
       // run individual middleware
       middleware(req, res, next, end)
+      return undefined
 
       function next (returnHandler) {
         if (res.error) {
@@ -142,6 +143,7 @@ class RpcEngine extends SafeEventEmitter {
           allReturnHandlers.push(returnHandler)
           return cb()
         }
+        return undefined
       }
 
       function end (err) {
@@ -171,6 +173,7 @@ class RpcEngine extends SafeEventEmitter {
       }
       const returnHandlers = allReturnHandlers.filter(Boolean).reverse()
       onDone(null, { isComplete, returnHandlers })
+      return undefined
     }
   }
 

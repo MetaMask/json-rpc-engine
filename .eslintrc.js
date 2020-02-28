@@ -34,8 +34,4 @@ module.exports = {
   }],
 
   ignorePatterns: ['dist'],
-
-  rules: {
-    'consistent-return': 0,
-  }
-};
+}

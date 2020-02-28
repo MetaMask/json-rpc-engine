@@ -18,6 +18,7 @@ function createAsyncMiddleware (asyncMiddleware) {
             return end(nextErr)
           }
           nextHandlerSignalDone(err)
+          return undefined
         })
       } else {
         // next handler was not called - complete middleware

@@ -15,6 +15,7 @@ function asMiddleware (engine) {
           engine._runReturnHandlersUp(returnHandlers, cb)
         })
       }
+      return undefined
     })
   }
 }
