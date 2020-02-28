@@ -19,7 +19,30 @@ class RpcEngine extends SafeEventEmitter {
     this._middleware.push(middleware)
   }
 
-  handle (req, cb) {
+  handle (req, callback) {
+    if (callback) {
+      return this.handleCallback(req, callback);
+    }
+    return this.handlePromise(req)
+  }
+
+  handlePromise (req) {
+    return new Promise ((resolve, reject) => {
+      const callback = (err, result) => {
+        if (err) return reject(err)
+        return resolve(result)
+      }
+
+      // batch request support
+      if (Array.isArray(req)) {
+        this._handleBatch(req, callback)
+      } else {
+        this._handle(req, callback)
+      }
+    })
+  }
+
+  handleCallback (req, cb) {
     // batch request support
     if (Array.isArray(req)) {
       this._handleBatch(req, cb)
