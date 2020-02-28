@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint . --ext js,json",
     "lint:fix": "eslint . --ext js,json --fix",
-    "build": "./node_modules/.bin/babel src --out-dir dist",
+    "build": "babel src --out-dir dist",
     "test": "mocha ./test",
     "coverage": "nyc yarn test"
   },
