@@ -2,8 +2,8 @@
 ### build ###
 dist
 
+### misc ###
 .nyc*
-
 
 # Created by https://www.gitignore.io/api/osx,node
 
@@ -14,7 +14,6 @@ dist
 
 # Icon must end with two \r
 Icon
-
 
 # Thumbnails
 ._*
@@ -33,7 +32,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
 
 ### Node ###
 
@@ -73,4 +71,3 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
-
