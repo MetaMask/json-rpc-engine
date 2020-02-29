@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "async": "^2.0.1",
-    "eth-json-rpc-errors": "^2.0.1",
+    "eth-json-rpc-errors": "^2.0.2",
     "promise-to-callback": "^1.0.0",
     "safe-event-emitter": "^1.0.1"
   },
@@ -28,7 +28,6 @@
     "@metamask/eslint-config": "^2.1.0",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
-    "browserify": "^16.2.3",
     "eslint": "^6.8.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-import": "^2.20.1",
