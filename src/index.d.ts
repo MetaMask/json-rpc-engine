@@ -54,10 +54,12 @@ interface JsonRpcMiddleware {
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void;
+  destroy?: () => void;
 }
 
 interface JsonRpcEngine {
   push: (middleware: JsonRpcMiddleware) => void;
   handle: (req: JsonRpcRequest<any>, callback: (error: JsonRpcError<any>, res: JsonRpcResponse<any>) => void) => void;
+  destroy: () => void;
+  isActive: () => boolean;
 }
-

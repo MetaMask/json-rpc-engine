@@ -6,10 +6,14 @@ const {
   serializeError, EthereumRpcError, ERROR_CODES,
 } = require('eth-json-rpc-errors')
 
+const DEACTIVATED_ERROR = 'Engine is deactivated; please initialize new engine.'
+
 module.exports = class RpcEngine extends SafeEventEmitter {
+
   constructor () {
     super()
     this._middleware = []
+    this._isActive = true
   }
 
   //
@@ -17,16 +21,36 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   //
 
   push (middleware) {
+    if (!this._isActive) {
+      throw new Error(DEACTIVATED_ERROR)
+    }
     this._middleware.push(middleware)
   }
 
   handle (req, cb) {
+    if (!this._isActive) {
+      throw new Error(DEACTIVATED_ERROR)
+    }
     // batch request support
     if (Array.isArray(req)) {
       this._handleBatch(req, cb)
     } else {
       this._handle(req, cb)
     }
+  }
+
+  destroy () {
+    this._isActive = false
+    this._middleware.forEach((middleware) => {
+      if (typeof middleware.destroy === 'function') {
+        middleware.destroy()
+      }
+    })
+    this._middleware = []
+  }
+
+  isActive () {
+    return this._isActive
   }
 
   //

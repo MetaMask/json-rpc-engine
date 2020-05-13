@@ -286,4 +286,53 @@ describe('basic tests', function () {
       done()
     })
   })
+
+  it('destroys engine and middlewares', function (done) {
+    const expectedErrorMessage = 'Engine is deactivated; please initialize new engine.'
+
+    const engine = new RpcEngine()
+
+    const middleware = function (_req, _res, _next, _end) {
+      console.log('foo')
+    }
+    middleware.destroyed = false
+    middleware.destroy = () => {
+      middleware.destroyed = true
+    }
+
+    engine.push(middleware)
+
+    assert(engine.isActive(), 'engine should be active')
+
+    engine.destroy()
+
+    assert(!engine.isActive(), 'engine should not be active')
+    assert(middleware.destroyed, 'middleware should be destroyed')
+
+    try {
+      engine.push()
+    } catch (err) {
+      assert(err, 'engine.push should error')
+      assert.equal(
+        err.message, expectedErrorMessage,
+        'error should have expected message',
+      )
+    }
+
+    try {
+      engine.handle()
+    } catch (err) {
+      assert(err, 'engine.handle should error')
+      assert.equal(
+        err.message, expectedErrorMessage,
+        'error should have expected message',
+      )
+    }
+
+    // destroy is idempotent
+    engine.destroy()
+
+    assert(!engine.isActive(), 'engine should still not be active')
+    done()
+  })
 })
