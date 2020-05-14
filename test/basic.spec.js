@@ -288,7 +288,7 @@ describe('basic tests', function () {
   })
 
   it('destroys engine and middlewares', function (done) {
-    const expectedErrorMessage = 'Engine is deactivated; please initialize new engine.'
+    const expectedError = new Error('Engine is deactivated; please initialize new engine.')
 
     const engine = new RpcEngine()
 
@@ -302,37 +302,29 @@ describe('basic tests', function () {
 
     engine.push(middleware)
 
-    assert(engine.isActive(), 'engine should be active')
+    assert.ok(engine.isActive(), 'engine should be active')
 
     engine.destroy()
 
-    assert(!engine.isActive(), 'engine should not be active')
-    assert(middleware.destroyed, 'middleware should be destroyed')
+    assert.ok(!engine.isActive(), 'engine should not be active')
+    assert.ok(middleware.destroyed, 'middleware should be destroyed')
 
-    try {
-      engine.push()
-    } catch (err) {
-      assert(err, 'engine.push should error')
-      assert.equal(
-        err.message, expectedErrorMessage,
-        'error should have expected message',
-      )
-    }
+    assert.throws(
+      () => engine.push(),
+      expectedError,
+      'error should have expected message',
+    )
 
-    try {
-      engine.handle()
-    } catch (err) {
-      assert(err, 'engine.handle should error')
-      assert.equal(
-        err.message, expectedErrorMessage,
-        'error should have expected message',
-      )
-    }
+    assert.throws(
+      () => engine.handle(),
+      expectedError,
+      'error should have expected message',
+    )
 
     // destroy is idempotent
     engine.destroy()
 
-    assert(!engine.isActive(), 'engine should still not be active')
+    assert.ok(!engine.isActive(), 'engine should still not be active')
     done()
   })
 })
