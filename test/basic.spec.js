@@ -288,7 +288,7 @@ describe('basic tests', function () {
   })
 
   it('engine.destroy destroys engine', function (done) {
-    const expectedError = new Error('This engine is destroyed; please initialize a new engine.')
+    const expectedError = new Error('JsonRpcEngine: This engine is destroyed; please initialize a new engine.')
 
     const engine = new RpcEngine()
 
@@ -308,6 +308,12 @@ describe('basic tests', function () {
       () => engine.handle(),
       expectedError,
       'engine.handle should throw expected error',
+    )
+
+    assert.throws(
+      () => engine._handle(),
+      expectedError,
+      'engine._handle should throw expected error',
     )
 
     // destroy is idempotent

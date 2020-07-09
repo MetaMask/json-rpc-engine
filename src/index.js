@@ -6,7 +6,7 @@ const {
   serializeError, EthereumRpcError, ERROR_CODES,
 } = require('eth-json-rpc-errors')
 
-const DESTROYED_ERROR_MESSAGE = 'This engine is destroyed; please initialize a new engine.'
+const DESTROYED_ERROR_MESSAGE = 'JsonRpcEngine: This engine is destroyed; please initialize a new engine.'
 
 module.exports = class RpcEngine extends SafeEventEmitter {
 
@@ -21,16 +21,20 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   //
 
   push (middleware) {
+
     if (this._isDestroyed) {
       throw new Error(DESTROYED_ERROR_MESSAGE)
     }
+
     this._middleware.push(middleware)
   }
 
   handle (req, cb) {
+
     if (this._isDestroyed) {
       throw new Error(DESTROYED_ERROR_MESSAGE)
     }
+
     // batch request support
     if (Array.isArray(req)) {
       this._handleBatch(req, cb)
@@ -92,6 +96,11 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   _handle (_req, cb) {
+
+    if (this._isDestroyed) {
+      throw new Error(DESTROYED_ERROR_MESSAGE)
+    }
+
     // shallow clone request object
     const req = { ..._req }
     // create response obj
