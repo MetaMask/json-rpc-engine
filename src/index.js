@@ -6,14 +6,14 @@ const {
   serializeError, EthereumRpcError, ERROR_CODES,
 } = require('eth-json-rpc-errors')
 
-const DEACTIVATED_ERROR_MESSAGE = 'Engine is deactivated; please initialize new engine.'
+const DESTROYED_ERROR_MESSAGE = 'This engine is destroyed; please initialize a new engine.'
 
 module.exports = class RpcEngine extends SafeEventEmitter {
 
   constructor () {
     super()
     this._middleware = []
-    this._isActive = true
+    this._isDestroyed = false
   }
 
   //
@@ -21,15 +21,15 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   //
 
   push (middleware) {
-    if (!this._isActive) {
-      throw new Error(DEACTIVATED_ERROR_MESSAGE)
+    if (this._isDestroyed) {
+      throw new Error(DESTROYED_ERROR_MESSAGE)
     }
     this._middleware.push(middleware)
   }
 
   handle (req, cb) {
-    if (!this._isActive) {
-      throw new Error(DEACTIVATED_ERROR_MESSAGE)
+    if (this._isDestroyed) {
+      throw new Error(DESTROYED_ERROR_MESSAGE)
     }
     // batch request support
     if (Array.isArray(req)) {
@@ -39,18 +39,23 @@ module.exports = class RpcEngine extends SafeEventEmitter {
     }
   }
 
+  /**
+   * Destroys the engine. In detail:
+   * - Causes "push" and "handle" to throw errors when called
+   * - Removes all listeners
+   */
   destroy () {
-    this._isActive = false
-    this._middleware.forEach((middleware) => {
-      if (typeof middleware.destroy === 'function') {
-        middleware.destroy()
-      }
-    })
-    this._middleware = []
+    this._isDestroyed = true
+    this.removeAllListeners()
   }
 
-  isActive () {
-    return this._isActive
+  /**
+   * Returns whether the engine has been destroyed.
+   *
+   * @returns {boolean} True if the engine has been destroyed, false otherwise.
+   */
+  isDestroyed () {
+    return this._isDestroyed
   }
 
   //
