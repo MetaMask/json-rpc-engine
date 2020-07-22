@@ -72,19 +72,22 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
     let err = null
     this._runMiddleware(req, res)
-      .catch((_err) => {
-        err = _err
+      .catch((middlewareError) => {
+        err = middlewareError
       })
       .finally(() => {
-        // take a clear any responseError
+
+        // preserve unserialized error for use in callback
         const responseError = res._originalError
         delete res._originalError
+
         if (responseError) {
           // ensure no result is present on an errored response
           delete res.result
           // return originalError and response
           return cb(responseError, res)
         }
+
         // return response
         return cb(err, res)
       })
@@ -98,13 +101,7 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
     for (const handler of returnHandlers) {
       await new Promise((resolve, reject) => {
-        handler((err) => {
-          if (err) {
-            reject(err)
-          } else {
-            resolve()
-          }
-        })
+        handler((err) => (err ? reject(err) : resolve()))
       })
     }
   }
@@ -132,10 +129,10 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
     // for climbing back up the stack
     const allReturnHandlers = []
-    // flag for stack return
+    // flag for early return
     let isComplete = false
 
-    // down stack of middleware, call and collect optional allReturnHandlers
+    // go down stack of middleware, call and collect optional allReturnHandlers
     for (const middleware of this._middleware) {
       if (!isComplete) {
         await runMiddleware(middleware)
@@ -150,7 +147,6 @@ module.exports = class RpcEngine extends SafeEventEmitter {
       return new Promise((resolve) => {
 
         try {
-          // run individual middleware
           middleware(req, res, next, end)
         } catch (err) {
           end(err)
@@ -168,11 +164,10 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
         function end (err) {
           // if errored, set the error but dont pass to callback
-          const _err = err || (res && res.error)
-          // const _err = err
-          if (_err) {
-            res.error = serializeError(_err)
-            res._originalError = _err
+          const anyError = err || (res && res.error)
+          if (anyError) {
+            res.error = serializeError(anyError)
+            res._originalError = anyError
           }
           // mark as completed
           isComplete = true
