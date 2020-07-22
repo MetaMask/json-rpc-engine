@@ -14,10 +14,10 @@
     "lint:fix": "eslint . --ext js,json --fix",
     "build": "babel src --out-dir dist",
     "test": "mocha ./test",
+    "test:path": "mocha",
     "coverage": "nyc yarn test"
   },
   "dependencies": {
-    "async": "^2.0.1",
     "eth-json-rpc-errors": "^2.0.2",
     "promise-to-callback": "^1.0.0",
     "safe-event-emitter": "^1.0.1"

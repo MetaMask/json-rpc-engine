@@ -1,6 +1,5 @@
 'use strict'
 
-const async = require('async')
 const SafeEventEmitter = require('safe-event-emitter')
 const {
   serializeError, EthereumRpcError, ERROR_CODES,
@@ -70,115 +69,116 @@ module.exports = class RpcEngine extends SafeEventEmitter {
       id: req.id,
       jsonrpc: req.jsonrpc,
     }
-    // process all middleware
-    this._runMiddleware(req, res, (err) => {
-      // take a clear any responseError
-      const responseError = res._originalError
-      delete res._originalError
-      if (responseError) {
-        // ensure no result is present on an errored response
-        delete res.result
-        // return originalError and response
-        return cb(responseError, res)
-      }
-      // return response
-      return cb(err, res)
-    })
+
+    let err = null
+    this._runMiddleware(req, res)
+      .catch((_err) => {
+        err = _err
+      })
+      .finally(() => {
+        // take a clear any responseError
+        const responseError = res._originalError
+        delete res._originalError
+        if (responseError) {
+          // ensure no result is present on an errored response
+          delete res.result
+          // return originalError and response
+          return cb(responseError, res)
+        }
+        // return response
+        return cb(err, res)
+      })
   }
 
-  _runMiddleware (req, res, onDone) {
-    // flow
-    async.waterfall([
-      (cb) => this._runMiddlewareDown(req, res, cb),
-      checkForCompletion,
-      (returnHandlers, cb) => this._runReturnHandlersUp(returnHandlers, cb),
-    ], onDone)
+  async _runMiddleware (req, res) {
 
-    function checkForCompletion ({ isComplete, returnHandlers }, cb) {
-      // fail if not completed
-      if (!('result' in res) && !('error' in res)) {
-        const requestBody = JSON.stringify(req, null, 2)
-        const message = `JsonRpcEngine: Response has no error or result for request:\n${requestBody}`
-        return cb(new EthereumRpcError(
-          ERROR_CODES.rpc.internal, message, req,
-        ))
-      }
-      if (!isComplete) {
-        const requestBody = JSON.stringify(req, null, 2)
-        const message = `JsonRpcEngine: Nothing ended request:\n${requestBody}`
-        return cb(new EthereumRpcError(
-          ERROR_CODES.rpc.internal, message, req,
-        ))
-      }
-      // continue
-      return cb(null, returnHandlers)
+    const { isComplete, returnHandlers } = await this._runMiddlewareDown(req, res)
+
+    this._checkForCompletion(req, res, isComplete)
+
+    for (const handler of returnHandlers) {
+      await new Promise((resolve, reject) => {
+        handler((err) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve()
+          }
+        })
+      })
+    }
+  }
+
+  _checkForCompletion (req, res, isComplete) {
+    // fail if not completed
+    if (!('result' in res) && !('error' in res)) {
+      const requestBody = JSON.stringify(req, null, 2)
+      const message = `JsonRpcEngine: Response has no error or result for request:\n${requestBody}`
+      throw new EthereumRpcError(
+        ERROR_CODES.rpc.internal, message, req,
+      )
+    }
+    if (!isComplete) {
+      const requestBody = JSON.stringify(req, null, 2)
+      const message = `JsonRpcEngine: Nothing ended request:\n${requestBody}`
+      throw new EthereumRpcError(
+        ERROR_CODES.rpc.internal, message, req,
+      )
     }
   }
 
   // walks down stack of middleware
-  _runMiddlewareDown (req, res, onDone) {
+  async _runMiddlewareDown (req, res) {
+
     // for climbing back up the stack
     const allReturnHandlers = []
     // flag for stack return
     let isComplete = false
 
     // down stack of middleware, call and collect optional allReturnHandlers
-    async.mapSeries(this._middleware, eachMiddleware, completeRequest)
+    for (const middleware of this._middleware) {
+      if (!isComplete) {
+        await runMiddleware(middleware)
+      }
+    }
+
+    const returnHandlers = allReturnHandlers.filter(Boolean).reverse()
+    return { isComplete, returnHandlers }
 
     // runs an individual middleware
-    function eachMiddleware (middleware, cb) {
-      // skip middleware if completed
-      if (isComplete) {
-        return cb()
-      }
-      // run individual middleware
-      middleware(req, res, next, end)
-      return undefined
+    function runMiddleware (middleware) {
+      return new Promise((resolve) => {
 
-      function next (returnHandler) {
-        if (res.error) {
-          end(res.error)
-        } else {
-          // add return handler
-          allReturnHandlers.push(returnHandler)
-          return cb()
+        try {
+          // run individual middleware
+          middleware(req, res, next, end)
+        } catch (err) {
+          end(err)
         }
-        return undefined
-      }
 
-      function end (err) {
-        // if errored, set the error but dont pass to callback
-        const _err = err || (res && res.error)
-        // const _err = err
-        if (_err) {
-          res.error = serializeError(_err)
-          res._originalError = _err
+        function next (returnHandler) {
+          if (res.error) {
+            end(res.error)
+          } else {
+            // add return handler
+            allReturnHandlers.push(returnHandler)
+            resolve()
+          }
         }
-        // mark as completed
-        isComplete = true
-        cb()
-      }
-    }
 
-    // returns, indicating whether or not it ended
-    function completeRequest (err) {
-      // this is an internal catastrophic error, not an error from middleware
-      if (err) {
-        // prepare error message
-        res.error = serializeError(err)
-        // remove result if present
-        delete res.result
-        // return error-first and res with err
-        return onDone(err, res)
-      }
-      const returnHandlers = allReturnHandlers.filter(Boolean).reverse()
-      onDone(null, { isComplete, returnHandlers })
-      return undefined
+        function end (err) {
+          // if errored, set the error but dont pass to callback
+          const _err = err || (res && res.error)
+          // const _err = err
+          if (_err) {
+            res.error = serializeError(_err)
+            res._originalError = _err
+          }
+          // mark as completed
+          isComplete = true
+          resolve()
+        }
+      })
     }
-  }
-
-  // climbs the stack calling return handlers
-  _runReturnHandlersUp (returnHandlers, cb) {
-    async.eachSeries(returnHandlers, (handler, next) => handler(next), cb)
   }
 }
