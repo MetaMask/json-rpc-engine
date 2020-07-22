@@ -71,6 +71,7 @@ module.exports = class RpcEngine extends SafeEventEmitter {
     }
 
     let err = null
+
     this._runMiddleware(req, res)
       .catch((middlewareError) => {
         err = middlewareError
@@ -139,7 +140,7 @@ module.exports = class RpcEngine extends SafeEventEmitter {
       }
     }
 
-    const returnHandlers = allReturnHandlers.filter(Boolean).reverse()
+    const returnHandlers = allReturnHandlers.reverse()
     return { isComplete, returnHandlers }
 
     // runs an individual middleware
@@ -157,13 +158,14 @@ module.exports = class RpcEngine extends SafeEventEmitter {
             end(res.error)
           } else {
             // add return handler
-            allReturnHandlers.push(returnHandler)
+            if (returnHandler) {
+              allReturnHandlers.push(returnHandler)
+            }
             resolve()
           }
         }
 
         function end (err) {
-          // if errored, set the error but dont pass to callback
           const anyError = err || (res && res.error)
           if (anyError) {
             res.error = serializeError(anyError)
