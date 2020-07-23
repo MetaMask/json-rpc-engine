@@ -62,41 +62,43 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   _handle (_req, cb) {
-    // shallow clone request object
+
     const req = { ..._req }
-    // create response obj
     const res = {
       id: req.id,
       jsonrpc: req.jsonrpc,
     }
 
-    let err = null
+    let processingError
 
-    this._runMiddleware(req, res)
-      .catch((middlewareError) => {
-        err = middlewareError
+    this._processRequest(req, res)
+      .catch((error) => {
+        // either from return handlers or something unexpected
+        processingError = error
       })
       .finally(() => {
 
-        // preserve unserialized error for use in callback
+        // preserve unserialized error, if any, for use in callback
         const responseError = res._originalError
         delete res._originalError
 
-        if (responseError) {
+        const error = responseError || processingError || null
+
+        if (error) {
           // ensure no result is present on an errored response
           delete res.result
-          // return originalError and response
-          return cb(responseError, res)
+          if (!res.error) {
+            res.error = serializeError(error)
+          }
         }
 
-        // return response
-        return cb(err, res)
+        cb(error, res)
       })
   }
 
-  async _runMiddleware (req, res) {
+  async _processRequest (req, res) {
 
-    const { isComplete, returnHandlers } = await this._runMiddlewareDown(req, res)
+    const { isComplete, returnHandlers } = await this._runMiddlewares(req, res)
 
     this._checkForCompletion(req, res, isComplete)
 
@@ -108,7 +110,6 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   _checkForCompletion (req, res, isComplete) {
-    // fail if not completed
     if (!('result' in res) && !('error' in res)) {
       const requestBody = JSON.stringify(req, null, 2)
       const message = `JsonRpcEngine: Response has no error or result for request:\n${requestBody}`
@@ -126,22 +127,21 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   // walks down stack of middleware
-  async _runMiddlewareDown (req, res) {
+  async _runMiddlewares (req, res) {
 
-    // for climbing back up the stack
-    const allReturnHandlers = []
+    const returnHandlers = []
     // flag for early return
     let isComplete = false
 
-    // go down stack of middleware, call and collect optional allReturnHandlers
+    // go down stack of middleware, call and collect optional returnHandlers
     for (const middleware of this._middleware) {
-      if (!isComplete) {
-        await runMiddleware(middleware)
+      if (isComplete) {
+        break
       }
+      await runMiddleware(middleware)
     }
 
-    const returnHandlers = allReturnHandlers.reverse()
-    return { isComplete, returnHandlers }
+    return { isComplete, returnHandlers: returnHandlers.reverse() }
 
     // runs an individual middleware
     function runMiddleware (middleware) {
@@ -157,22 +157,22 @@ module.exports = class RpcEngine extends SafeEventEmitter {
           if (res.error) {
             end(res.error)
           } else {
-            // add return handler
             if (returnHandler) {
-              allReturnHandlers.push(returnHandler)
+              returnHandlers.push(returnHandler)
             }
             resolve()
           }
         }
 
         function end (err) {
-          const anyError = err || (res && res.error)
-          if (anyError) {
-            res.error = serializeError(anyError)
-            res._originalError = anyError
-          }
-          // mark as completed
           isComplete = true
+
+          const error = err || (res && res.error)
+          if (error) {
+            res.error = serializeError(error)
+            res._originalError = error
+            delete res.result
+          }
           resolve()
         }
       })

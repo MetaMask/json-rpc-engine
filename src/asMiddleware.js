@@ -1,30 +1,32 @@
 'use strict'
 
 module.exports = function asMiddleware (engine) {
-  return async function engineAsMiddleware (req, res, next, end) {
-    const { isComplete, returnHandlers } = await engine._runMiddlewareDown(req, res)
+  return function engineAsMiddleware (req, res, next, end) {
 
     let err = null
 
-    if (isComplete) {
-      return runReturnHandlers()
-        .catch((handlerError) => {
-          err = handlerError
-        })
-        .finally(() => {
-          end(err)
-        })
-    }
+    engine._runMiddlewares(req, res)
+      .then(async ({ isComplete, returnHandlers }) => {
+        if (isComplete) {
+          return await runReturnHandlers()
+        }
 
-    return next(async (cb) => {
-      await runReturnHandlers()
-      cb()
-    })
+        return next(async (cb) => {
+          await runReturnHandlers()
+          cb()
+        })
 
-    async function runReturnHandlers () {
-      for (const handler of returnHandlers) {
-        await new Promise((resolve) => handler(resolve))
-      }
-    }
+        async function runReturnHandlers () {
+          for (const handler of returnHandlers) {
+            await new Promise((resolve) => handler(resolve))
+          }
+        }
+      })
+      .catch((error) => {
+        err = error
+      })
+      .finally(() => {
+        end(err)
+      })
   }
 }
