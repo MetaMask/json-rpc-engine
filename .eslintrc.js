@@ -1,27 +1,19 @@
 module.exports = {
   root: true,
 
+  parserOptions: {
+    ecmaVersion: 2018,
+  },
+
+  plugins: [
+    'json',
+    'import',
+  ],
+
   extends: [
     '@metamask/eslint-config',
     '@metamask/eslint-config/config/mocha',
     '@metamask/eslint-config/config/nodejs',
-  ],
-
-  parser: 'babel-eslint',
-
-  parserOptions: {
-    ecmaVersion: 2017,
-    ecmaFeatures: {
-      arrowFunctions: true,
-      classes: true,
-      experimentalObjectRestSpread: true,
-    },
-  },
-
-  plugins: [
-    'babel',
-    'json',
-    'import',
   ],
 
   overrides: [{
@@ -32,6 +24,4 @@ module.exports = {
       sourceType: 'script',
     },
   }],
-
-  ignorePatterns: ['dist'],
 }
