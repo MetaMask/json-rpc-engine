@@ -40,12 +40,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kumavis/json-rpc-engine.git"
+    "url": "git+https://github.com/MetaMask/json-rpc-engine.git"
   },
   "bugs": {
-    "url": "https://github.com/kumavis/json-rpc-engine/issues"
+    "url": "https://github.com/MetaMask/json-rpc-engine/issues"
   },
-  "homepage": "https://github.com/kumavis/json-rpc-engine#readme",
+  "homepage": "https://github.com/MetaMask/json-rpc-engine#readme",
   "directories": {
     "test": "test"
   },
