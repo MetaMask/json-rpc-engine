@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "eth-json-rpc-errors": "^2.0.2",
-    "promise-to-callback": "^1.0.0",
     "safe-event-emitter": "^1.0.1"
   },
   "devDependencies": {
