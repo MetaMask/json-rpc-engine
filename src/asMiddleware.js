@@ -2,7 +2,6 @@
 
 module.exports = function asMiddleware (engine) {
   return function engineAsMiddleware (req, res, next, end) {
-
     engine._runMiddlewares(req, res)
       .then(async ({ isComplete, returnHandlers }) => {
 
@@ -17,7 +16,7 @@ module.exports = function asMiddleware (engine) {
           } catch (err) {
             return handlerCallback(err)
           }
-          handlerCallback()
+          return handlerCallback()
         })
       })
       .catch((error) => {
