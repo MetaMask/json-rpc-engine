@@ -23,50 +23,33 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
   handle (req, cb) {
 
-    if (!cb) {
-      if (Array.isArray(req)) {
-        return this._handleBatch(req)
+    if (Array.isArray(req)) {
+      if (cb) {
+        this._handleBatch(req)
+          .catch((err) => cb(err)) // fatal error
+          .then((res) => cb(null, res))
+        return undefined
       }
-      return this._promiseHandle(req)
+      return this._handleBatch(req)
     }
 
-    if (Array.isArray(req)) {
-      this._handleBatch(req, cb)
-    } else {
-      this._handle(req, cb)
+    if (!cb) {
+      return this._promiseHandle(req)
     }
-    return undefined
+    return this._handle(req, cb)
   }
 
   //
   // Private
   //
 
-  async _handleBatch (reqs, cb) {
-
-    let batchRes
-    let error = null
-
+  async _handleBatch (reqs) {
     // The order here is important
-    try {
-      // 3a. Store batch response
-      batchRes = await Promise.all( // 2. Wait for all requests to finish
-        // 1. Begin executing each request in the order received
-        reqs.map(this._promiseHandle.bind(this)),
-      )
-    } catch (err) {
-      // 3b. Some kind of fatal error, all requests are lost
-      error = err
-    }
-
-    if (cb) {
-      return cb(error, batchRes)
-    }
-
-    if (error) {
-      throw error
-    }
-    return batchRes
+    // 3a. Return batch response, or reject on some kind of fatal error
+    return await Promise.all( // 2. Wait for all requests to finish
+      // 1. Begin executing each request in the order received
+      reqs.map(this._promiseHandle.bind(this)),
+    )
   }
 
   _promiseHandle (req) {
