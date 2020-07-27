@@ -22,30 +22,34 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   handle (req, cb) {
-    // batch request support
+
     if (Array.isArray(req)) {
-      this._handleBatch(req, cb)
-    } else {
-      this._handle(req, cb)
+      if (cb) {
+        this._handleBatch(req)
+          .catch((err) => cb(err)) // fatal error
+          .then((res) => cb(null, res))
+        return undefined
+      }
+      return this._handleBatch(req)
     }
+
+    if (!cb) {
+      return this._promiseHandle(req)
+    }
+    return this._handle(req, cb)
   }
 
   //
   // Private
   //
 
-  async _handleBatch (reqs, cb) {
-
+  async _handleBatch (reqs) {
     // The order here is important
-    try {
-      const batchRes = await Promise.all( // 2. Wait for all requests to finish
-        // 1. Begin executing each request in the order received
-        reqs.map(this._promiseHandle.bind(this)),
-      )
-      return cb(null, batchRes) // 3a. Return batch response
-    } catch (err) {
-      return cb(err) // 3b. Some kind of fatal error; all requests are lost
-    }
+    // 3a. Return batch response, or reject on some kind of fatal error
+    return await Promise.all( // 2. Wait for all requests to finish
+      // 1. Begin executing each request in the order received
+      reqs.map(this._promiseHandle.bind(this)),
+    )
   }
 
   _promiseHandle (req) {
@@ -58,9 +62,9 @@ module.exports = class RpcEngine extends SafeEventEmitter {
     })
   }
 
-  _handle (_req, cb) {
+  _handle (callerReq, cb) {
 
-    const req = Object.assign({}, _req)
+    const req = Object.assign({}, callerReq)
     const res = {
       id: req.id,
       jsonrpc: req.jsonrpc,
@@ -129,47 +133,45 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
     // go down stack of middleware, call and collect optional returnHandlers
     for (const middleware of this._middleware) {
+      isComplete = await RpcEngine._runMiddleware(
+        req, res, middleware, returnHandlers,
+      )
       if (isComplete) {
         break
       }
-      await runMiddleware(middleware)
     }
-
     return { isComplete, returnHandlers: returnHandlers.reverse() }
+  }
 
-    // runs an individual middleware
-    function runMiddleware (middleware) {
-      return new Promise((resolve) => {
+  // runs an individual middleware
+  static _runMiddleware (req, res, middleware, returnHandlers) {
+    return new Promise((resolve) => {
 
-        try {
-          middleware(req, res, next, end)
-        } catch (err) {
-          end(err)
+      const end = (err) => {
+        const error = err || (res && res.error)
+        if (error) {
+          res.error = serializeError(error)
+          res._originalError = error
         }
+        resolve(true) // true indicates the request should end
+      }
 
-        function next (returnHandler) {
-          if (res.error) {
-            end(res.error)
-          } else {
-            if (returnHandler) {
-              returnHandlers.push(returnHandler)
-            }
-            resolve()
+      const next = (returnHandler) => {
+        if (res.error) {
+          end(res.error)
+        } else {
+          if (returnHandler) {
+            returnHandlers.push(returnHandler)
           }
+          resolve(false) // false indicates the request should not end
         }
+      }
 
-        function end (err) {
-          isComplete = true
-
-          const error = err || (res && res.error)
-          if (error) {
-            res.error = serializeError(error)
-            res._originalError = error
-            delete res.result
-          }
-          resolve()
-        }
-      })
-    }
+      try {
+        middleware(req, res, next, end)
+      } catch (error) {
+        end(error)
+      }
+    })
   }
 }
