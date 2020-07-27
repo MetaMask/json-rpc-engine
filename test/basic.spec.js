@@ -408,7 +408,7 @@ describe('basic tests', function () {
 
     const engine = new RpcEngine()
 
-    engine._handleBatch([{}], (err) => {
+    engine.handle([{}], (err) => {
       assert.ok(err, 'did error')
       assert.equal(err.message, 'foo', 'error has expected message')
       done()
@@ -425,7 +425,7 @@ describe('basic tests', function () {
     const engine = new RpcEngine()
 
     try {
-      await engine._handleBatch([{}])
+      await engine.handle([{}])
       assert.fail('should have errored')
     } catch (err) {
       assert.ok(err, 'did error')

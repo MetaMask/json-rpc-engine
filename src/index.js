@@ -26,8 +26,10 @@ module.exports = class RpcEngine extends SafeEventEmitter {
     if (Array.isArray(req)) {
       if (cb) {
         this._handleBatch(req)
-          .catch((err) => cb(err)) // fatal error
-          .then((res) => cb(null, res))
+          .then(
+            (res) => cb(null, res),
+            (err) => cb(err),
+          )
         return undefined
       }
       return this._handleBatch(req)
