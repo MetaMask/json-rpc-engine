@@ -9,9 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.2.0] - 2020-07-24
 
+### Added
+
+- Promise signatures for `engine.handle` ([#55](https://github.com/MetaMask/json-rpc-engine/pull/55))
+  - So, in addition to `engine.handle(request, callback)`, you can do e.g. `await engine.handle(request)`.
+
 ### Changed
 
 - Remove `async` and `promise-to-callback` dependencies
   - These dependencies were used internally for asynchronous control flow.
   They have been replaced with Promises and native `async`/`await`.
-  This has introduced subtle timing differences during middleware execution, but none that should affect consumers.
+  This has made middleware execution faster, and may affect consumers that rely on middleware timing, advertently or not.
