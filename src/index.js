@@ -70,16 +70,11 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   _promiseHandle (req) {
-    return new Promise((resolve, reject) => {
-      this._handle(req, (err, res) => {
-        if (res) {
-          resolve(res)
-        } else {
-          reject(err || new EthereumRpcError(
-            ERROR_CODES.rpc.internal,
-            'JsonRpcEngine: Request handler returned neither error nor response.',
-          ))
-        }
+    return new Promise((resolve) => {
+      this._handle(req, (_err, res) => {
+        // there will always be a response, and it will always have any error
+        // that is caught and propagated
+        resolve(res)
       })
     })
   }
@@ -120,12 +115,13 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   async _processRequest (req, res) {
-
     const { isComplete, returnHandlers } = await this._runMiddlewares(req, res)
-
     this._checkForCompletion(req, res, isComplete)
+    await this._runReturnHandlers(returnHandlers)
+  }
 
-    for (const handler of returnHandlers) {
+  async _runReturnHandlers (handlers) {
+    for (const handler of handlers) {
       await new Promise((resolve, reject) => {
         handler((err) => (err ? reject(err) : resolve()))
       })
