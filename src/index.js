@@ -86,7 +86,7 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
   _handle (callerReq, cb) {
 
-    const req = { ...callerReq }
+    const req = Object.assign({}, callerReq)
     const res = {
       id: req.id,
       jsonrpc: req.jsonrpc,
