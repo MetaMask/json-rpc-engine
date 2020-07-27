@@ -129,7 +129,7 @@ module.exports = class RpcEngine extends SafeEventEmitter {
 
     // go down stack of middleware, call and collect optional returnHandlers
     for (const middleware of this._middleware) {
-      isComplete = await this._runMiddleware(
+      isComplete = await RpcEngine._runMiddleware(
         req, res, middleware, returnHandlers,
       )
       if (isComplete) {
@@ -140,7 +140,7 @@ module.exports = class RpcEngine extends SafeEventEmitter {
   }
 
   // runs an individual middleware
-  _runMiddleware (req, res, middleware, returnHandlers) {
+  static _runMiddleware (req, res, middleware, returnHandlers) {
     return new Promise((resolve) => {
 
       const end = (err) => {
