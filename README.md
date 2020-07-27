@@ -86,7 +86,7 @@ engine.push(createAsyncMiddleware(async (req, res, next) => {
 
 The `next` callback of `async` middleware also don't take return handlers.
 Instead, you can `await next()`.
-When the execution of the middleware resumes, you can work with the response.
+When the execution of the middleware resumes, you can work with the response again.
 
 ```js
 engine.push(createAsyncMiddleware(async (req, res, next) => {
