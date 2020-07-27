@@ -29,7 +29,7 @@ engine.handle(request, function(err, res){
 })
 ```
 
-Middlewares have direct access to the request and response objects.
+Middleware have direct access to the request and response objects.
 They can let processing continue down the stack with `next()`, or complete the request with `end()`.
 
 ```js
