@@ -4,7 +4,7 @@
 const { strict: assert } = require('assert')
 const RpcEngine = require('../src')
 
-describe('basic tests', function () {
+describe('RpcEngine tests', function () {
   it('basic middleware test 1', function (done) {
     const engine = new RpcEngine()
 
