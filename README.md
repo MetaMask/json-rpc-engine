@@ -60,9 +60,9 @@ let subengine = new RpcEngine()
 engine.push(asMiddleware(subengine))
 ```
 
-### Asynchronous Middlewares
+### `async` Middleware
 
-If you require your middleware function to be asynchronous, use `createAsyncMiddleware`:
+If you require your middleware function to be `async`, use `createAsyncMiddleware`:
 
 ```js
 const createAsyncMiddleware = require('json-rpc-engine/src/createAsyncMiddleware')
@@ -74,7 +74,7 @@ engine.push(createAsyncMiddleware(async (req, res, next) => {
 }))
 ```
 
-Asynchronous middlewares do not take an `end` callback.
+`async` middleware do not take an `end` callback.
 Instead, the request ends if the middleware returns without calling `next()`:
 
 ```js
@@ -84,7 +84,7 @@ engine.push(createAsyncMiddleware(async (req, res, next) => {
 }))
 ```
 
-The `next` callback of asynchronous middlewares also don't take return handlers.
+The `next` callback of `async` middleware also don't take return handlers.
 Instead, you can `await next()`.
 When the execution of the middleware resumes, you can work with the response.
 
@@ -97,7 +97,7 @@ engine.push(createAsyncMiddleware(async (req, res, next) => {
 }))
 ```
 
-You can freely mix synchronous and asynchronous middlewares:
+You can freely mix callback-based and `async` middleware:
 
 ```js
 engine.push(function(req, res, next, end){
