@@ -2,7 +2,7 @@ module.exports = {
   root: true,
 
   parserOptions: {
-    ecmaVersion: 2018,
+    ecmaVersion: 2017,
   },
 
   plugins: [
@@ -15,6 +15,10 @@ module.exports = {
     '@metamask/eslint-config/config/mocha',
     '@metamask/eslint-config/config/nodejs',
   ],
+
+  rules: {
+    'prefer-object-spread': 'off',
+  },
 
   overrides: [{
     files: [
