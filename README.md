@@ -10,7 +10,7 @@ const RpcEngine = require('json-rpc-engine')
 let engine = new RpcEngine()
 ```
 
-Build a stack of JSON-RPC processors by pushing middlewares to the engine.
+Build a stack of JSON-RPC processors by pushing middleware to the engine.
 
 ```js
 engine.push(function(req, res, next, end){
