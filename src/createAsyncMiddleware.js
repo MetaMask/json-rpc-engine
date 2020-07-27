@@ -1,10 +1,11 @@
 /**
- * JsonRpcEngine only accepts synchronous middlewares.
- * createAsyncMiddleware exists to enable consumers to pass in async middlewares.
+ * JsonRpcEngine only accepts callback-based middleware directly.
+ * createAsyncMiddleware exists to enable consumers to pass in async middleware
+ * functions.
  *
- * Async middlewares have no "end" function. Instead, they "end" if they return
+ * Async middleware have no "end" function. Instead, they "end" if they return
  * without calling "next". Rather than passing in explicit return handlers,
- * async middlewares can simply await "next", and perform operations on the
+ * async middleware can simply await "next", and perform operations on the
  * response object when execution resumes.
  *
  * To accomplish this, createAsyncMiddleware passes the async middleware a
