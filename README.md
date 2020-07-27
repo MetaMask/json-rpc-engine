@@ -69,7 +69,7 @@ const createAsyncMiddleware = require('json-rpc-engine/src/createAsyncMiddleware
 
 let engine = new RpcEngine()
 engine.push(createAsyncMiddleware(async (req, res, next) => {
-  req.result = 42
+  res.result = 42
   next()
 }))
 ```
@@ -79,7 +79,7 @@ Instead, the request ends if the middleware returns without calling `next()`:
 
 ```js
 engine.push(createAsyncMiddleware(async (req, res, next) => {
-  req.result = 42
+  res.result = 42
   /* The request will end when this returns */
 }))
 ```
@@ -90,7 +90,7 @@ When the execution of the middleware resumes, you can work with the response.
 
 ```js
 engine.push(createAsyncMiddleware(async (req, res, next) => {
-  req.result = 42
+  res.result = 42
   await next()
   /* Now you can work with the response */
   addToMetrics(res)
@@ -111,7 +111,7 @@ engine.push(function(req, res, next, end){
 })
 
 engine.push(createAsyncMiddleware(async (req, res, next) => {
-  req.result = 42
+  res.result = 42
   await next()
   addToMetrics(res)
 }))
