@@ -92,7 +92,7 @@ When the execution of the middleware resumes, you can work with the response aga
 engine.push(createAsyncMiddleware(async (req, res, next) => {
   res.result = 42
   await next()
-  /* Now you can work with the response */
+  /* Your return handler logic goes here */
   addToMetrics(res)
 }))
 ```
