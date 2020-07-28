@@ -2,6 +2,7 @@
 'use strict'
 
 const { strict: assert } = require('assert')
+const { stub } = require('sinon')
 const RpcEngine = require('../src')
 
 describe('RpcEngine tests', function () {
@@ -400,13 +401,8 @@ describe('RpcEngine tests', function () {
   })
 
   it('handles batch request processing error', function (done) {
-    const origPromiseAll = Promise.all
-    Promise.all = () => {
-      Promise.all = origPromiseAll
-      throw new Error('foo')
-    }
-
     const engine = new RpcEngine()
+    stub(engine, '_promiseHandle').throws(new Error('foo'))
 
     engine.handle([{}], (err) => {
       assert.ok(err, 'did error')
@@ -416,13 +412,8 @@ describe('RpcEngine tests', function () {
   })
 
   it('handles batch request processing error (async)', async function () {
-    const origPromiseAll = Promise.all
-    Promise.all = () => {
-      Promise.all = origPromiseAll
-      throw new Error('foo')
-    }
-
     const engine = new RpcEngine()
+    stub(engine, '_promiseHandle').throws(new Error('foo'))
 
     try {
       await engine.handle([{}])
