@@ -1,6 +1,12 @@
 
 import { IEthereumRpcError } from 'eth-rpc-errors/@types'
 
+/**
+ * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types#42123766
+ */
+type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;
+
 /** A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0". */
 export type JsonRpcVersion = "2.0";
 
@@ -15,39 +21,42 @@ export type JsonRpcReservedMethod = string;
  *  NOT contain fractional parts [2] */
 export type JsonRpcId = number | string | void;
 
-interface JsonRpcError<T> extends IEthereumRpcError<T> {}
+export interface JsonRpcError<T> extends IEthereumRpcError<T> {}
 
-interface JsonRpcRequest<T> {
+export interface JsonRpcRequest<T> {
   jsonrpc: JsonRpcVersion;
   method: string;
   id: JsonRpcId;
   params?: T;
 }
 
-interface JsonRpcNotification<T> extends JsonRpcResponse<T> {
+export interface JsonRpcNotification<T> {
   jsonrpc: JsonRpcVersion;
+  method: string,
   params?: T;
 }
 
-interface JsonRpcResponse<T> {
-  result?: T;
-  error?: JsonRpcError<unknown>;
-  jsonrpc: JsonRpcVersion;
-  id: JsonRpcId;
+interface JsonRpcResponseBase {
+  jsonrpc: JsonRpcVersion,
+  id: JsonRpcId,
 }
 
-interface JsonRpcSuccess<T> extends JsonRpcResponse<T> {
+export interface JsonRpcSuccess<T> extends JsonRpcResponseBase {
   result: T;
 }
 
-interface JsonRpcFailure<T> extends JsonRpcResponse<T> {
-    error: JsonRpcError<T>;
+export interface JsonRpcFailure<T> extends JsonRpcResponseBase {
+  error: JsonRpcError<T>;
 }
 
-type JsonRpcEngineEndCallback = (error?: JsonRpcError<unknown>) => void;
-type JsonRpcEngineNextCallback = (returnFlightCallback?: (done: () => void) => void) => void;
+export type JsonRpcResponse<T> = XOR<JsonRpcSuccess<T>, JsonRpcFailure<T>>
 
-interface JsonRpcMiddleware {
+export type JsonRpcEngineEndCallback = (error?: JsonRpcError<unknown>) => void;
+export type JsonRpcEngineNextCallback = (
+  returnFlightCallback?: (done: () => void) => void,
+) => void;
+
+export interface JsonRpcMiddleware {
   (
     req: JsonRpcRequest<unknown>,
     res: JsonRpcResponse<unknown>,
@@ -56,7 +65,7 @@ interface JsonRpcMiddleware {
   ) : void;
 }
 
-interface JsonRpcEngine {
+export interface JsonRpcEngine {
   push: (middleware: JsonRpcMiddleware) => void;
   handle: (
     req: JsonRpcRequest<unknown>,
