@@ -2,6 +2,7 @@
 import { IEthereumRpcError } from 'eth-rpc-errors/@types'
 
 /**
+ * XOR utility type. XOR<A, B> is either A or B, but not both.
  * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types#42123766
  */
 type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
