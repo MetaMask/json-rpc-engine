@@ -30,27 +30,27 @@ interface JsonRpcNotification<T> extends JsonRpcResponse<T> {
 }
 
 interface JsonRpcResponse<T> {
-  result?: any;
-  error?: JsonRpcError<any>;
+  result?: T;
+  error?: JsonRpcError<unknown>;
   jsonrpc: JsonRpcVersion;
   id: JsonRpcId;
 }
 
 interface JsonRpcSuccess<T> extends JsonRpcResponse<T> {
-    result: any;
+  result: T;
 }
 
 interface JsonRpcFailure<T> extends JsonRpcResponse<T> {
     error: JsonRpcError<T>;
 }
 
-type JsonRpcEngineEndCallback = (error?: JsonRpcError<any>) => void;
+type JsonRpcEngineEndCallback = (error?: JsonRpcError<unknown>) => void;
 type JsonRpcEngineNextCallback = (returnFlightCallback?: (done: () => void) => void) => void;
 
 interface JsonRpcMiddleware {
   (
-    req: JsonRpcRequest<any>,
-    res: JsonRpcResponse<any>,
+    req: JsonRpcRequest<unknown>,
+    res: JsonRpcResponse<unknown>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void;
@@ -58,6 +58,12 @@ interface JsonRpcMiddleware {
 
 interface JsonRpcEngine {
   push: (middleware: JsonRpcMiddleware) => void;
-  handle: (req: JsonRpcRequest<any>, callback: (error: JsonRpcError<any>, res: JsonRpcResponse<any>) => void) => void;
+  handle: (
+    req: JsonRpcRequest<unknown>,
+    callback: (
+      error: JsonRpcError<unknown>,
+      res: JsonRpcResponse<unknown>,
+    ) => void,
+  ) => void;
 }
 
