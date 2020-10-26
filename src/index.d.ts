@@ -113,3 +113,7 @@ export interface createIdRemapMiddleware {
 export interface mergeMiddleware {
   (middlewares: JsonRpcMiddleware[]): JsonRpcMiddleware;
 }
+
+export interface getUniqueId {
+  (): number;
+}
