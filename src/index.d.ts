@@ -1,13 +1,6 @@
 
 import { IEthereumRpcError } from 'eth-rpc-errors/@types'
 
-/**
- * XOR utility type. XOR<A, B> is either A or B, but not both.
- * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types#42123766
- */
-type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
-type XOR<T, U> = (T | U) extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;
-
 /** A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0". */
 export type JsonRpcVersion = "2.0";
 
@@ -50,7 +43,7 @@ export interface JsonRpcFailure<T> extends JsonRpcResponseBase {
   error: JsonRpcError<T>;
 }
 
-export type JsonRpcResponse<T> = XOR<JsonRpcSuccess<T>, JsonRpcFailure<T>>
+export type JsonRpcResponse<T> = JsonRpcSuccess<T> | JsonRpcFailure<T>
 
 export type JsonRpcEngineEndCallback = (error?: JsonRpcError<unknown>) => void;
 export type JsonRpcEngineNextCallback = (
@@ -76,4 +69,3 @@ export interface JsonRpcEngine {
     ) => void,
   ) => void;
 }
-
