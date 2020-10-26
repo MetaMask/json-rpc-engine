@@ -133,7 +133,7 @@ module.exports = class JsonRpcEngine extends SafeEventEmitter {
 
     // go down stack of middleware, call and collect optional returnHandlers
     for (const middleware of this._middleware) {
-      isComplete = await RpcEngine._runMiddleware(
+      isComplete = await JsonRpcEngine._runMiddleware(
         req, res, middleware, returnHandlers,
       )
       if (isComplete) {
