@@ -7,7 +7,7 @@ const {
   ERROR_CODES,
 } = require('eth-rpc-errors')
 
-module.exports = class RpcEngine extends SafeEventEmitter {
+module.exports = class JsonRpcEngine extends SafeEventEmitter {
   constructor () {
     super()
     this._middleware = []
