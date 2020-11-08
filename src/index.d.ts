@@ -98,12 +98,11 @@ export interface createAsyncMiddleware {
   (asyncMiddleware: AsyncJsonrpcMiddleware): JsonRpcMiddleware;
 }
 
-type ScaffoldMiddlewareHandler = JsonRpcMiddleware | (
-  boolean | number | string | Record<string, unknown> | unknown[] | null | undefined
-)
+type Serializable = boolean | number | string | Record<string, unknown> | unknown[] | null | undefined;
+type ScaffoldMiddlewareHandler<T> = T extends Function ? JsonRpcMiddleware : Serializable;
 
-export interface createScaffoldMiddleware {
-  (handlers: {[methodName: string]: ScaffoldMiddlewareHandler}): JsonRpcMiddleware;
+export interface createScaffoldMiddleware<T> {
+  (handlers: {[methodName: string]: ScaffoldMiddlewareHandler<T>}): JsonRpcMiddleware;
 }
 
 export interface createIdRemapMiddleware {
