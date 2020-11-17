@@ -1,14 +1,6 @@
-import { JsonRpcMiddleware, JsonRpcSuccess } from './JsonRpcEngine';
+import { Json, JsonRpcMiddleware, JsonRpcSuccess } from './JsonRpcEngine';
 
-type Serializable =
-  | boolean
-  | number
-  | string
-  | Record<string, unknown>
-  | unknown[]
-  | null
-  | undefined;
-type ScaffoldMiddlewareHandler = JsonRpcMiddleware | Serializable;
+type ScaffoldMiddlewareHandler = JsonRpcMiddleware | Json;
 
 export function createScaffoldMiddleware(handlers: {
   [methodName: string]: ScaffoldMiddlewareHandler;

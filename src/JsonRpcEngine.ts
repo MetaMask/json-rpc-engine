@@ -1,6 +1,14 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
 
+export type Json =
+  | boolean
+  | number
+  | string
+  | null
+  | { [property: string]: Json}
+  | Json[];
+
 /**
  * A String specifying the version of the JSON-RPC protocol.
  * MUST be exactly "2.0".
