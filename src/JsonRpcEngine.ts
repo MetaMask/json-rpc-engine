@@ -19,7 +19,7 @@ export interface JsonRpcError {
   code: number;
   message: string;
   data?: unknown;
-  stack?: unknown;
+  stack?: string;
 }
 
 export interface JsonRpcRequest<T> {
