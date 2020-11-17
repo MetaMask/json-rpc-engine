@@ -6,6 +6,15 @@ const { stub } = require('sinon');
 const { JsonRpcEngine } = require('../dist');
 
 describe('JsonRpcEngine', function () {
+  it('handle: throws on truthy, non-function callback', function () {
+    const engine = new JsonRpcEngine();
+    assert.throws(
+      () => engine.handle({}, true),
+      { message: '"callback" must be a function if provided.' },
+      'should throw expected error',
+    );
+  });
+
   it('handle: basic middleware test 1', function (done) {
     const engine = new JsonRpcEngine();
 

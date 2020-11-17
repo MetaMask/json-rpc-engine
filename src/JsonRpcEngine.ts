@@ -127,6 +127,10 @@ export class JsonRpcEngine extends SafeEventEmitter {
   ): Promise<JsonRpcResponse<unknown>[]>;
 
   handle(req: unknown, cb?: any) {
+    if (cb && typeof cb !== 'function') {
+      throw new Error('"callback" must be a function if provided.');
+    }
+
     if (Array.isArray(req)) {
       if (cb) {
         this._handleBatch(req)
