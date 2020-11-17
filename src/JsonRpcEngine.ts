@@ -308,7 +308,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       const end: JsonRpcEngineEndCallback = (
         err?: JsonRpcEngineCallbackError,
       ) => {
-        const error = err || res?.error;
+        const error = err || res.error;
         if (error) {
           res.error = serializeError(error);
           res._originalError = error;

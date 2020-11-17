@@ -5,7 +5,7 @@
 const { strict: assert } = require('assert');
 const { JsonRpcEngine, createAsyncMiddleware } = require('../dist');
 
-describe('createAsyncMiddleware tests', function () {
+describe('createAsyncMiddleware', function () {
   it('basic middleware test', function (done) {
     const engine = new JsonRpcEngine();
 

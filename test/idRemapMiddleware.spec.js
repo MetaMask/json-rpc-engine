@@ -4,7 +4,7 @@
 const { strict: assert } = require('assert');
 const { JsonRpcEngine, createIdRemapMiddleware } = require('../dist');
 
-describe('idRemapMiddleware tests', function () {
+describe('idRemapMiddleware', function () {
   it('basic middleware test', function (done) {
     const engine = new JsonRpcEngine();
 

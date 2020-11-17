@@ -44,9 +44,12 @@ export function createAsyncMiddleware(
     let returnHandlerCallback: (error: null | Error) => void;
     let nextWasCalled: boolean;
 
+    // This will be called by the consumer's async middleware.
     const asyncNext = async () => {
       nextWasCalled = true;
 
+      // We pass a return handler to next(). When it is called by the engine,
+      // the consumer's async middleware will resume executing.
       // eslint-disable-next-line node/callback-return
       next((callback) => {
         returnHandlerCallback = callback;

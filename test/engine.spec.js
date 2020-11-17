@@ -5,8 +5,8 @@ const { strict: assert } = require('assert');
 const { stub } = require('sinon');
 const { JsonRpcEngine } = require('../dist');
 
-describe('JsonRpcEngine tests', function () {
-  it('basic middleware test 1', function (done) {
+describe('JsonRpcEngine', function () {
+  it('handle: basic middleware test 1', function (done) {
     const engine = new JsonRpcEngine();
 
     engine.push(function (_req, res, _next, end) {
@@ -24,7 +24,7 @@ describe('JsonRpcEngine tests', function () {
     });
   });
 
-  it('basic middleware test 2', function (done) {
+  it('handle: basic middleware test 2', function (done) {
     const engine = new JsonRpcEngine();
 
     engine.push(function (req, res, _next, end) {
@@ -44,7 +44,7 @@ describe('JsonRpcEngine tests', function () {
     });
   });
 
-  it('basic middleware test (async)', async function () {
+  it('handle (async): basic middleware test', async function () {
     const engine = new JsonRpcEngine();
 
     engine.push(function (_req, res, _next, end) {

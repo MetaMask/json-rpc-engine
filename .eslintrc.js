@@ -38,6 +38,7 @@ module.exports = {
   ignorePatterns: [
     '!.eslintrc.js',
     '.nyc*',
-    'dist',
+    'coverage/',
+    'dist/',
   ],
 };
