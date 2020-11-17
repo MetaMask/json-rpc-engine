@@ -204,6 +204,19 @@ export class JsonRpcEngine extends SafeEventEmitter {
       response: JsonRpcResponse<unknown>
     ) => void,
   ): Promise<void> {
+    if (
+      !callerReq ||
+      Array.isArray(callerReq) ||
+      typeof callerReq !== 'object'
+    ) {
+      const error = new EthereumRpcError(
+        errorCodes.rpc.invalidRequest,
+        `Requests must be plain objects. Received: ${typeof callerReq}`,
+        { request: callerReq },
+      );
+      return cb(error, { id: undefined, jsonrpc: '2.0', error });
+    }
+
     const req: JsonRpcRequest<unknown> = { ...callerReq };
     const res: InternalJsonRpcResponse = {
       id: req.id,

@@ -15,6 +15,17 @@ describe('JsonRpcEngine', function () {
     );
   });
 
+  it('handle: returns error for invalid request parameter', async function () {
+    const engine = new JsonRpcEngine();
+    const response1 = await engine.handle(null);
+    assert.equal(response1.error.code, -32600, 'should have expected error');
+    assert.equal(response1.result, undefined, 'should have no results');
+
+    const response2 = await engine.handle(true);
+    assert.equal(response2.error.code, -32600, 'should have expected error');
+    assert.equal(response2.result, undefined, 'should have no results');
+  });
+
   it('handle: basic middleware test 1', function (done) {
     const engine = new JsonRpcEngine();
 
@@ -198,7 +209,7 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('handle batch payloads', function (done) {
+  it('handle: batch payloads', function (done) {
     const engine = new JsonRpcEngine();
 
     engine.push(function (req, res, _next, end) {
@@ -232,7 +243,7 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('handle batch payloads (async signature)', async function () {
+  it('handle: batch payloads (async signature)', async function () {
     const engine = new JsonRpcEngine();
 
     engine.push(function (req, res, _next, end) {
@@ -261,6 +272,28 @@ describe('JsonRpcEngine', function () {
     assert.ok(!res[3].result, 'has no result');
     assert.equal(res[3].error.code, -32603, 'has expected error');
     assert.equal(res[4].result, 5, 'has expected result');
+  });
+
+  it('handle: batch payload with bad request object', async function () {
+    const engine = new JsonRpcEngine();
+
+    engine.push(function (req, res, _next, end) {
+      res.result = req.id;
+      return end();
+    });
+
+    const payloadA = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payloadB = true;
+    const payloadC = { id: 3, jsonrpc: '2.0', method: 'hello' };
+    const payload = [payloadA, payloadB, payloadC];
+
+    const res = await engine.handle(payload);
+    assert.ok(res, 'has res');
+    assert.ok(Array.isArray(res), 'res is array');
+    assert.equal(res[0].result, 1, 'should have expected result');
+    assert.equal(res[1].error.code, -32600, 'should have expected error');
+    assert.ok(!res[1].result, 'should have no result');
+    assert.equal(res[2].result, 3, 'should have expected result');
   });
 
   it('basic notifications', function (done) {
