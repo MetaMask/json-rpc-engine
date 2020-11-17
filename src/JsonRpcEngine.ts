@@ -107,16 +107,16 @@ export class JsonRpcEngine extends SafeEventEmitter {
   handle(
     request: JsonRpcRequest<unknown>,
     callback: (
-      error?: JsonRpcEngineCallbackError,
-      response?: JsonRpcResponse<unknown>
+      error: unknown,
+      response: JsonRpcResponse<unknown>
     ) => void
   ): void;
 
   handle(
     requests: JsonRpcRequest<unknown>[],
     callback: (
-      error?: JsonRpcEngineCallbackError,
-      responses?: JsonRpcResponse<unknown>[]
+      error: unknown,
+      responses: JsonRpcResponse<unknown>[]
     ) => void
   ): void;
 
@@ -198,8 +198,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
   private _handle(
     callerReq: JsonRpcRequest<unknown>,
     cb: (
-      error: JsonRpcEngineCallbackError,
-      response?: JsonRpcResponse<unknown>
+      error: unknown,
+      response: JsonRpcResponse<unknown>
     ) => void,
   ): void {
     const req: JsonRpcRequest<unknown> = { ...callerReq };
@@ -230,12 +230,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
           }
         }
 
-        // eslint doesn't like our error interface
-        // eslint-disable-next-line node/no-callback-literal
-        cb(
-          error as JsonRpcEngineCallbackError,
-          res as JsonRpcResponse<unknown>,
-        );
+        cb(error, res as JsonRpcResponse<unknown>);
       });
   }
 
@@ -318,7 +313,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
   ): Promise<boolean> {
     return new Promise((resolve) => {
       const end: JsonRpcEngineEndCallback = (
-        err?: JsonRpcEngineCallbackError,
+        err?: unknown,
       ) => {
         const error = err || res.error;
         if (error) {
