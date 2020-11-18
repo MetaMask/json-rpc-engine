@@ -104,27 +104,27 @@ export class JsonRpcEngine extends SafeEventEmitter {
     this._middleware.push(middleware as InternalMiddleware);
   }
 
-  handle(
-    request: JsonRpcRequest<unknown>,
+  handle<T, U>(
+    request: JsonRpcRequest<T>,
     callback: (
       error: unknown,
-      response: JsonRpcResponse<unknown>
+      response: JsonRpcResponse<U>
     ) => void
   ): void;
 
-  handle(
-    requests: JsonRpcRequest<unknown>[],
+  handle<T, U>(
+    requests: JsonRpcRequest<T>[],
     callback: (
       error: unknown,
-      responses: JsonRpcResponse<unknown>[]
+      responses: JsonRpcResponse<U>[]
     ) => void
   ): void;
 
-  handle(request: JsonRpcRequest<unknown>): Promise<JsonRpcResponse<unknown>>;
+  handle<T, U>(request: JsonRpcRequest<T>): Promise<JsonRpcResponse<U>>;
 
-  handle(
-    requests: JsonRpcRequest<unknown>[]
-  ): Promise<JsonRpcResponse<unknown>[]>;
+  handle<T, U>(
+    requests: JsonRpcRequest<T>[]
+  ): Promise<JsonRpcResponse<U>[]>;
 
   handle(req: unknown, cb?: any) {
     if (cb && typeof cb !== 'function') {
