@@ -1,6 +1,8 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
 
+type Maybe<T> = T extends Record<string, unknown> ? Partial<T> : T | null | undefined;
+
 export type Json =
   | boolean
   | number
@@ -49,7 +51,7 @@ interface JsonRpcResponseBase {
 }
 
 export interface JsonRpcSuccess<T> extends JsonRpcResponseBase {
-  result: T;
+  result: Maybe<T>;
 }
 
 export interface JsonRpcFailure extends JsonRpcResponseBase {
