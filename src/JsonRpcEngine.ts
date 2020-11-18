@@ -74,9 +74,9 @@ export type JsonRpcEngineEndCallback = (
   error?: JsonRpcEngineCallbackError
 ) => void;
 
-export type JsonRpcMiddleware = (
-  req: JsonRpcRequest<unknown>,
-  res: JsonRpcResponse<unknown>,
+export type JsonRpcMiddleware<T, U> = (
+  req: JsonRpcRequest<T>,
+  res: JsonRpcResponse<U>,
   next: JsonRpcEngineNextCallback,
   end: JsonRpcEngineEndCallback
 ) => void;
@@ -102,7 +102,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     this._middleware = [];
   }
 
-  push(middleware: JsonRpcMiddleware): void {
+  push<T, U>(middleware: JsonRpcMiddleware<T, U>): void {
     this._middleware.push(middleware as InternalMiddleware);
   }
 
@@ -149,7 +149,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     return this._promiseHandle(req as JsonRpcRequest<unknown>);
   }
 
-  asMiddleware(): JsonRpcMiddleware {
+  asMiddleware(): JsonRpcMiddleware<unknown, unknown> {
     return (req, res, next, end) => {
       this._runAllMiddleware(req, res)
         .then(async ({ isComplete, returnHandlers }) => {

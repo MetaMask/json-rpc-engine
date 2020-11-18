@@ -6,9 +6,9 @@ import {
 
 export type AsyncJsonRpcEngineNextCallback = () => Promise<void>;
 
-export type AsyncJsonrpcMiddleware = (
-  req: JsonRpcRequest<unknown>,
-  res: JsonRpcResponse<unknown>,
+export type AsyncJsonrpcMiddleware<T, U> = (
+  req: JsonRpcRequest<T>,
+  res: JsonRpcResponse<U>,
   next: AsyncJsonRpcEngineNextCallback
 ) => Promise<void>;
 
@@ -29,9 +29,9 @@ export type AsyncJsonrpcMiddleware = (
  * The return handler will always be called. Its resolution of the promise
  * enables the control flow described above.
  */
-export function createAsyncMiddleware(
-  asyncMiddleware: AsyncJsonrpcMiddleware,
-): JsonRpcMiddleware {
+export function createAsyncMiddleware<T, U>(
+  asyncMiddleware: AsyncJsonrpcMiddleware<T, U>,
+): JsonRpcMiddleware<T, U> {
   return (req, res, next, end) => {
     // nextPromise is the key to the implementation
     // it is resolved by the return handler passed to the
