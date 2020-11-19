@@ -197,43 +197,43 @@ export class JsonRpcEngine extends SafeEventEmitter {
     });
   }
 
-  private _handle(
+  private async _handle(
     callerReq: JsonRpcRequest<unknown>,
     cb: (
       error: unknown,
       response: JsonRpcResponse<unknown>
     ) => void,
-  ): void {
+  ): Promise<void> {
     const req: JsonRpcRequest<unknown> = { ...callerReq };
     const res: InternalJsonRpcResponse = {
       id: req.id,
       jsonrpc: req.jsonrpc,
     };
 
-    let processingError: Error | JsonRpcError;
+    let processingError: JsonRpcEngineCallbackError = null;
 
-    this._processRequest(req, res)
-      .catch((error) => {
-        // either from return handlers or something unexpected
-        processingError = error;
-      })
-      .finally(() => {
-        // Preserve unserialized error, if any, for use in callback
-        const responseError = res._originalError;
-        delete res._originalError;
+    try {
+      await this._processRequest(req, res);
+    } catch (error) {
+      // either from return handlers or something unexpected
+      processingError = error;
+    }
 
-        const error = responseError || processingError || null;
+    // Preserve unserialized error, if any, for use in callback
+    const responseError = res._originalError;
+    delete res._originalError;
 
-        if (error) {
-          // Ensure no result is present on an errored response
-          delete res.result;
-          if (!res.error) {
-            res.error = serializeError(error);
-          }
-        }
+    const error = responseError || processingError || null;
 
-        cb(error, res as JsonRpcResponse<unknown>);
-      });
+    if (error) {
+      // Ensure no result is present on an errored response
+      delete res.result;
+      if (!res.error) {
+        res.error = serializeError(error);
+      }
+    }
+
+    return cb(error, res as JsonRpcResponse<unknown>);
   }
 
   private async _processRequest(
