@@ -155,10 +155,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
     if (Array.isArray(req)) {
       if (cb) {
-        this._handleBatch(req)
-          .then((res) => cb(null, res as JsonRpcResponse<unknown>[]))
-          .catch((err) => cb(err)); // fatal error
-        return undefined;
+        return this._handleBatch(req, cb);
       }
       return this._handleBatch(req);
     }
@@ -206,16 +203,43 @@ export class JsonRpcEngine extends SafeEventEmitter {
   /**
    * Like _handle, but for batch requests.
    */
+  private _handleBatch(
+    reqs: JsonRpcRequest<unknown>[],
+  ): Promise<JsonRpcResponse<unknown>[]>;
+
+  /**
+   * Like _handle, but for batch requests.
+   */
+  private _handleBatch(
+    reqs: JsonRpcRequest<unknown>[],
+    cb: (error: unknown, responses?: JsonRpcResponse<unknown>[]) => void,
+  ): Promise<void>;
+
   private async _handleBatch(
     reqs: JsonRpcRequest<unknown>[],
-  ): Promise<JsonRpcResponse<unknown>[]> {
+    cb?: (error: unknown, responses?: JsonRpcResponse<unknown>[]) => void,
+  ): Promise<JsonRpcResponse<unknown>[] | void> {
     // The order here is important
-    // 3. Return batch response, or reject on some kind of fatal error
-    return await Promise.all(
-      // 2. Wait for all requests to finish
-      // 1. Begin executing each request in the order received
-      reqs.map(this._promiseHandle.bind(this)),
-    );
+    try {
+      // 2. Wait for all requests to finish, or throw on some kind of fatal
+      // error
+      const responses = await Promise.all(
+        // 1. Begin executing each request in the order received
+        reqs.map(this._promiseHandle.bind(this)),
+      );
+
+      // 3. Return batch response
+      if (cb) {
+        return cb(null, responses);
+      }
+      return responses;
+    } catch (error) {
+      if (cb) {
+        return cb(error);
+      }
+
+      throw error;
+    }
   }
 
   /**
