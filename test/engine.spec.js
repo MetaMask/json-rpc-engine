@@ -209,6 +209,29 @@ describe('JsonRpcEngine', function () {
     });
   });
 
+  it('erroring middleware test: non-function passsed to next()', function (done) {
+    const engine = new JsonRpcEngine();
+
+    engine.push(function (_req, _res, next, _end) {
+      next(true);
+    });
+
+    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+
+    engine.handle(payload, function (err, res) {
+      assert.ok(err, 'should error');
+      assert.ok(res, 'should have response');
+      assert.ok(res.error, 'should have error on response');
+      assert.equal(res.error.code, -32603, 'should have expected error');
+      assert.ok(
+        res.error.message.startsWith('JsonRpcEngine: "next" return handlers must be functions.'),
+        'should have expected error',
+      );
+      assert.ok(!res.result, 'should not have result on response');
+      done();
+    });
+  });
+
   it('empty middleware test', function (done) {
     const engine = new JsonRpcEngine();
 

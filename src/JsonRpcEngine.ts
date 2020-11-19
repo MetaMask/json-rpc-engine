@@ -317,14 +317,18 @@ export class JsonRpcEngine extends SafeEventEmitter {
     isComplete: boolean,
   ): void {
     if (!('result' in res) && !('error' in res)) {
-      const requestBody = JSON.stringify(req, null, 2);
-      const message = `JsonRpcEngine: Response has no error or result for request:\n${requestBody}`;
-      throw new EthereumRpcError(errorCodes.rpc.internal, message, req);
+      throw new EthereumRpcError(
+        errorCodes.rpc.internal,
+        `JsonRpcEngine: Response has no error or result for request:\n${jsonify(req)}`,
+        { request: req },
+      );
     }
     if (!isComplete) {
-      const requestBody = JSON.stringify(req, null, 2);
-      const message = `JsonRpcEngine: Nothing ended request:\n${requestBody}`;
-      throw new EthereumRpcError(errorCodes.rpc.internal, message, req);
+      throw new EthereumRpcError(
+        errorCodes.rpc.internal,
+        `JsonRpcEngine: Nothing ended request:\n${jsonify(req)}`,
+        { request: req },
+      );
     }
   }
 
@@ -384,8 +388,17 @@ export class JsonRpcEngine extends SafeEventEmitter {
           end(res.error);
         } else {
           if (returnHandler) {
+            if (typeof returnHandler !== 'function') {
+              end(new EthereumRpcError(
+                errorCodes.rpc.internal,
+                `JsonRpcEngine: "next" return handlers must be functions. ` +
+                `Received "${typeof returnHandler}" for request:\n${jsonify(req)}`,
+                { request: req },
+              ));
+            }
             returnHandlers.push(returnHandler);
           }
+
           // False indicates that the request should not end
           resolve(false);
         }
@@ -398,4 +411,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
       }
     });
   }
+}
+
+function jsonify(request: JsonRpcRequest<unknown>): string {
+  return JSON.stringify(request, null, 2);
 }
