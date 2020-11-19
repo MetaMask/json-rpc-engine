@@ -94,6 +94,10 @@ type InternalMiddleware = (
   end: JsonRpcEngineEndCallback
 ) => void;
 
+/**
+ * A JSON-RPC request and response processor.
+ * Give it a stack of middleware, pass it requests, and get back responses.
+ */
 export class JsonRpcEngine extends SafeEventEmitter {
   private _middleware: InternalMiddleware[];
 
@@ -102,10 +106,21 @@ export class JsonRpcEngine extends SafeEventEmitter {
     this._middleware = [];
   }
 
+  /**
+   * Add a middleware function to the engine's middleware stack.
+   *
+   * @param middleware - The middleware function to add.
+   */
   push<T, U>(middleware: JsonRpcMiddleware<T, U>): void {
     this._middleware.push(middleware as InternalMiddleware);
   }
 
+  /**
+   * Handle a JSON-RPC request, and return a response.
+   *
+   * @param request - The request to handle.
+   * @param callback - An error-first callback that will receive the response.
+   */
   handle<T, U>(
     request: JsonRpcRequest<T>,
     callback: (
@@ -114,6 +129,13 @@ export class JsonRpcEngine extends SafeEventEmitter {
     ) => void
   ): void;
 
+  /**
+   * Handle an array of JSON-RPC requests, and return an array of responses.
+   *
+   * @param request - The requests to handle.
+   * @param callback - An error-first callback that will receive the array of
+   * responses.
+   */
   handle<T, U>(
     requests: JsonRpcRequest<T>[],
     callback: (
@@ -122,8 +144,22 @@ export class JsonRpcEngine extends SafeEventEmitter {
     ) => void
   ): void;
 
+  /**
+   * Handle a JSON-RPC request, and return a response.
+   *
+   * @param request - The request to handle.
+   * @returns A promise that resolves with the response, or rejects with an
+   * error.
+   */
   handle<T, U>(request: JsonRpcRequest<T>): Promise<JsonRpcResponse<U>>;
 
+  /**
+   * Handle an array of JSON-RPC requests, and return an array of responses.
+   *
+   * @param request - The requests to handle.
+   * @returns A promise that resolves with the array of responses, or rejects
+   * with an error.
+   */
   handle<T, U>(
     requests: JsonRpcRequest<T>[]
   ): Promise<JsonRpcResponse<U>[]>;
@@ -149,6 +185,12 @@ export class JsonRpcEngine extends SafeEventEmitter {
     return this._promiseHandle(req as JsonRpcRequest<unknown>);
   }
 
+  /**
+   * Returns this engine as a middleware function that can be pushed to other
+   * engines.
+   *
+   * @returns This engine as a middleware function.
+   */
   asMiddleware(): JsonRpcMiddleware<unknown, unknown> {
     return (req, res, next, end) => {
       this._runAllMiddleware(req, res)
