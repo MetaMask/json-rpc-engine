@@ -201,6 +201,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
     };
   }
 
+  /**
+   * Like _handle, but for batch requests.
+   */
   private async _handleBatch(
     reqs: JsonRpcRequest<unknown>[],
   ): Promise<JsonRpcResponse<unknown>[]> {
@@ -213,6 +216,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
     );
   }
 
+  /**
+   * A promise-wrapped _handle.
+   */
   private _promiseHandle(
     req: JsonRpcRequest<unknown>,
   ): Promise<JsonRpcResponse<unknown>> {
@@ -225,6 +231,12 @@ export class JsonRpcEngine extends SafeEventEmitter {
     });
   }
 
+  /**
+   * Ensures that the request object is valid, processes it, and passes any
+   * error and the response object to the given callback.
+   *
+   * Does not reject.
+   */
   private async _handle(
     callerReq: JsonRpcRequest<unknown>,
     cb: (error: unknown, response: JsonRpcResponse<unknown>) => void,
@@ -277,6 +289,11 @@ export class JsonRpcEngine extends SafeEventEmitter {
     return cb(error, res as JsonRpcResponse<unknown>);
   }
 
+  /**
+   * For the given request and response, runs all middleware and their return
+   * handlers, if any, and ensures that internal request processing semantics
+   * are satisfied.
+   */
   private async _processRequest(
     req: JsonRpcRequest<unknown>,
     res: InternalJsonRpcResponse,
@@ -303,7 +320,11 @@ export class JsonRpcEngine extends SafeEventEmitter {
   }
 
   /**
-   * Walks down internal stack of middleware.
+   * Serially executes the given stack of middleware.
+   *
+   * @returns An array of any error encountered during middleware execution,
+   * a boolean indicating whether the request was completed, and an array of
+   * middleware-defined return handlers.
    */
   private static async _runAllMiddleware(
     req: JsonRpcRequest<unknown>,
@@ -335,8 +356,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
   /**
    * Runs an individual middleware.
-   * @returns An array of a boolean indicating whether the request should end,
-   * and any error encountered during request processing.
+   *
+   * @returns An array of any error encountered during middleware exection,
+   * and a boolean indicating whether the request should end.
    */
   private static _runMiddleware(
     req: JsonRpcRequest<unknown>,
@@ -385,6 +407,10 @@ export class JsonRpcEngine extends SafeEventEmitter {
     });
   }
 
+  /**
+   * Serially executes array of return handlers. The request and response are
+   * assumed to be in their scope.
+   */
   private static async _runReturnHandlers(
     handlers: JsonRpcEngineReturnHandler[],
   ): Promise<void> {
@@ -395,6 +421,10 @@ export class JsonRpcEngine extends SafeEventEmitter {
     }
   }
 
+  /**
+   * Throws an error if the response has neither a result nor an error, or if
+   * the "isComplete" flag is falsy.
+   */
   private static _checkForCompletion(
     req: JsonRpcRequest<unknown>,
     res: InternalJsonRpcResponse,
