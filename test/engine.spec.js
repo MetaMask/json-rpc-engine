@@ -17,13 +17,24 @@ describe('JsonRpcEngine', function () {
 
   it('handle: returns error for invalid request parameter', async function () {
     const engine = new JsonRpcEngine();
-    const response1 = await engine.handle(null);
-    assert.equal(response1.error.code, -32600, 'should have expected error');
-    assert.equal(response1.result, undefined, 'should have no results');
+    let response = await engine.handle(null);
+    assert.equal(response.error.code, -32600, 'should have expected error');
+    assert.equal(response.result, undefined, 'should have no results');
 
-    const response2 = await engine.handle(true);
-    assert.equal(response2.error.code, -32600, 'should have expected error');
-    assert.equal(response2.result, undefined, 'should have no results');
+    response = await engine.handle(true);
+    assert.equal(response.error.code, -32600, 'should have expected error');
+    assert.equal(response.result, undefined, 'should have no results');
+  });
+
+  it('handle: returns error for invalid request method', async function () {
+    const engine = new JsonRpcEngine();
+    let response = await engine.handle({ method: null });
+    assert.equal(response.error.code, -32600, 'should have expected error');
+    assert.equal(response.result, undefined, 'should have no results');
+
+    response = await engine.handle({ method: true });
+    assert.equal(response.error.code, -32600, 'should have expected error');
+    assert.equal(response.result, undefined, 'should have no results');
   });
 
   it('handle: basic middleware test 1', function (done) {
