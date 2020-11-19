@@ -8,7 +8,7 @@ export type Json =
   | number
   | string
   | null
-  | { [property: string]: Json}
+  | { [property: string]: Json }
   | Json[];
 
 /**
@@ -123,10 +123,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    */
   handle<T, U>(
     request: JsonRpcRequest<T>,
-    callback: (
-      error: unknown,
-      response: JsonRpcResponse<U>
-    ) => void
+    callback: (error: unknown, response: JsonRpcResponse<U>) => void,
   ): void;
 
   /**
@@ -138,10 +135,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    */
   handle<T, U>(
     requests: JsonRpcRequest<T>[],
-    callback: (
-      error: unknown,
-      responses: JsonRpcResponse<U>[]
-    ) => void
+    callback: (error: unknown, responses: JsonRpcResponse<U>[]) => void,
   ): void;
 
   /**
@@ -160,9 +154,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @returns A promise that resolves with the array of responses, or rejects
    * with an error.
    */
-  handle<T, U>(
-    requests: JsonRpcRequest<T>[]
-  ): Promise<JsonRpcResponse<U>[]>;
+  handle<T, U>(requests: JsonRpcRequest<T>[]): Promise<JsonRpcResponse<U>[]>;
 
   handle(req: unknown, cb?: any) {
     if (cb && typeof cb !== 'function') {
@@ -241,10 +233,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
   private async _handle(
     callerReq: JsonRpcRequest<unknown>,
-    cb: (
-      error: unknown,
-      response: JsonRpcResponse<unknown>
-    ) => void,
+    cb: (error: unknown, response: JsonRpcResponse<unknown>) => void,
   ): Promise<void> {
     if (
       !callerReq ||
@@ -369,9 +358,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     returnHandlers: JsonRpcEngineReturnHandler[],
   ): Promise<boolean> {
     return new Promise((resolve) => {
-      const end: JsonRpcEngineEndCallback = (
-        err?: unknown,
-      ) => {
+      const end: JsonRpcEngineEndCallback = (err?: unknown) => {
         const error = err || res.error;
         if (error) {
           res.error = serializeError(error);
