@@ -247,6 +247,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       );
       return cb(error, { id: undefined, jsonrpc: '2.0', error });
     }
+
     if (typeof callerReq.method !== 'string') {
       const error = new EthereumRpcError(
         errorCodes.rpc.invalidRequest,
