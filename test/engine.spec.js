@@ -2,8 +2,8 @@
 'use strict';
 
 const { strict: assert } = require('assert');
-const { stub } = require('sinon');
 const { JsonRpcEngine } = require('../dist');
+const { stub } = require('sinon');
 
 describe('JsonRpcEngine', function () {
   it('handle: throws on truthy, non-function callback', function () {
