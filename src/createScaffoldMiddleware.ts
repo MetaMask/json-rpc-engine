@@ -3,8 +3,8 @@ import { Json, JsonRpcMiddleware, JsonRpcSuccess } from './JsonRpcEngine';
 type ScaffoldMiddlewareHandler<T, U> = JsonRpcMiddleware<T, U> | Json;
 
 export function createScaffoldMiddleware(handlers: {
-  [methodName: string]: ScaffoldMiddlewareHandler<unknown, unknown>;
-}): JsonRpcMiddleware<unknown, unknown> {
+  [methodName: string]: ScaffoldMiddlewareHandler<any, any>;
+}): JsonRpcMiddleware<any, any> {
   return (req, res, next, end) => {
     const handler = handlers[req.method];
     // if no handler, return
