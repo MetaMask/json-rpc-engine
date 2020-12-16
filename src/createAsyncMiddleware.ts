@@ -38,8 +38,8 @@ export function createAsyncMiddleware<T, U>(
     // nextPromise is the key to the implementation
     // it is resolved by the return handler passed to the
     // "next" function
-    let resolveNextPromise: (value?: unknown) => void;
-    const nextPromise = new Promise((resolve) => {
+    let resolveNextPromise: () => void;
+    const nextPromise = new Promise<void>((resolve) => {
       resolveNextPromise = resolve;
     });
 
