@@ -14,8 +14,9 @@
   "scripts": {
     "build": "tsc --project .",
     "lint": "eslint . --ext ts,js,json",
-    "lint:fix": "eslint . --ext ts,js,json --fix",
-    "test": "mocha ./test",
+    "lint:fix": "yarn lint --fix",
+    "test:nobuild": "mocha ./test",
+    "test": "yarn build && yarn test:nobuild",
     "coverage": "nyc --check-coverage yarn test",
     "prepublishOnly": "yarn && yarn lint && yarn build && yarn coverage"
   },
