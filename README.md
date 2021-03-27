@@ -53,7 +53,7 @@ engine.push(async function(req, res, next, end){
 })
 ```
 
-By passing a _return handler_ to the `next` function, you can get a peek at the result before it returns.
+By passing a _return handler_ to the `next` function, you can get a peek at the response before it is returned to the requester.
 
 ```js
 engine.push(function(req, res, next, end){
@@ -71,28 +71,43 @@ const subengine = new JsonRpcEngine()
 engine.push(subengine.asMiddleware())
 ```
 
-### Gotchas
+### Error Handling
 
-Handle errors via `end(err)`, *NOT* `next(err)`.
+Errors should be handled by throwing inside middleware functions.
+
+For backwards compatibility, you can also pass an error to the `end` callback,
+or set the error on the response object, and then call `end` or `next`.
+However, errors must **not** be passed to the `next` callback.
+
+Errors always take precedent over results.
+If an error is detected, the response's `result` property will be deleted.
+
+All of the following examples are equivalent.
+It does not matter of the middleware function is synchronous or asynchronous.
 
 ```js
-/* INCORRECT */
+// Throwing is preferred.
 engine.push(function(req, res, next, end){
-  next(new Error())
+  throw new Error()
 })
 
-/* CORRECT */
+// For backwards compatibility, you can also do this:
 engine.push(function(req, res, next, end){
   end(new Error())
 })
-```
 
-However, `next()` will detect errors on the response object, and cause
-`end(res.error)` to be called.
-
-```js
 engine.push(function(req, res, next, end){
   res.error = new Error()
-  next() /* This will cause end(res.error) to be called. */
+  end()
+})
+
+engine.push(function(req, res, next, end){
+  res.error = new Error()
+  next()
+})
+
+// INCORRECT. Do not do this:
+engine.push(function(req, res, next, end){
+  next(new Error())
 })
 ```
