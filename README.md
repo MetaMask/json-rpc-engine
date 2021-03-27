@@ -39,7 +39,17 @@ They can let processing continue down the stack with `next()`, or complete the r
 engine.push(function(req, res, next, end){
   if (req.skipCache) return next()
   res.result = getResultFromCache(req)
-  end()
+  return end()
+})
+```
+
+Middleware functions can be `async`:
+
+```js
+engine.push(async function(req, res, next, end){
+  if (req.method !== targetMethod) return next()
+  res.result = await processTargetMethodRequest(req)
+  return end()
 })
 ```
 
@@ -59,63 +69,6 @@ Engines can be nested by converting them to middleware using `JsonRpcEngine.asMi
 const engine = new JsonRpcEngine()
 const subengine = new JsonRpcEngine()
 engine.push(subengine.asMiddleware())
-```
-
-### `async` Middleware
-
-If you require your middleware function to be `async`, use `createAsyncMiddleware`:
-
-```js
-const { createAsyncMiddleware } = require('json-rpc-engine')
-
-let engine = new RpcEngine()
-engine.push(createAsyncMiddleware(async (req, res, next) => {
-  res.result = 42
-  next()
-}))
-```
-
-`async` middleware do not take an `end` callback.
-Instead, the request ends if the middleware returns without calling `next()`:
-
-```js
-engine.push(createAsyncMiddleware(async (req, res, next) => {
-  res.result = 42
-  /* The request will end when this returns */
-}))
-```
-
-The `next` callback of `async` middleware also don't take return handlers.
-Instead, you can `await next()`.
-When the execution of the middleware resumes, you can work with the response again.
-
-```js
-engine.push(createAsyncMiddleware(async (req, res, next) => {
-  res.result = 42
-  await next()
-  /* Your return handler logic goes here */
-  addToMetrics(res)
-}))
-```
-
-You can freely mix callback-based and `async` middleware:
-
-```js
-engine.push(function(req, res, next, end){
-  if (!isCached(req)) {
-    return next((cb) => {
-      insertIntoCache(res, cb)
-    })
-  }
-  res.result = getResultFromCache(req)
-  end()
-})
-
-engine.push(createAsyncMiddleware(async (req, res, next) => {
-  res.result = 42
-  await next()
-  addToMetrics(res)
-}))
 ```
 
 ### Gotchas
