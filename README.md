@@ -39,11 +39,21 @@ They can let processing continue down the stack with `next()`, or complete the r
 engine.push(function (req, res, next, end) {
   if (req.skipCache) return next();
   res.result = getResultFromCache(req);
-  end();
+  return end();
 });
 ```
 
-By passing a _return handler_ to the `next` function, you can get a peek at the result before it returns.
+Middleware functions can be `async`:
+
+```js
+engine.push(async function (req, res, next, end) {
+  if (req.method !== targetMethod) return next();
+  res.result = await processTargetMethodRequest(req);
+  return end();
+});
+```
+
+By passing a _return handler_ to the `next` function, you can get a peek at the response before it is returned to the requester.
 
 ```js
 engine.push(function (req, res, next, end) {
@@ -73,69 +83,45 @@ const subengine = new JsonRpcEngine();
 engine.push(subengine.asMiddleware());
 ```
 
-### `async` Middleware
+### Error Handling
 
-If you require your middleware function to be `async`, use `createAsyncMiddleware`:
+Errors should be handled by throwing inside middleware functions.
 
-```js
-const { createAsyncMiddleware } = require('@metamask/json-rpc-engine');
+For backwards compatibility, you can also pass an error to the `end` callback,
+or set the error on the response object, and then call `end` or `next`.
+However, errors must **not** be passed to the `next` callback.
 
-let engine = new RpcEngine();
-engine.push(
-  createAsyncMiddleware(async (req, res, next) => {
-    res.result = 42;
-    next();
-  }),
-);
-```
+Errors always take precedent over results.
+If an error is detected, the response's `result` property will be deleted.
 
-`async` middleware do not take an `end` callback.
-Instead, the request ends if the middleware returns without calling `next()`:
+All of the following examples are equivalent.
+It does not matter of the middleware function is synchronous or asynchronous.
 
 ```js
-engine.push(
-  createAsyncMiddleware(async (req, res, next) => {
-    res.result = 42;
-    /* The request will end when this returns */
-  }),
-);
-```
-
-The `next` callback of `async` middleware also don't take return handlers.
-Instead, you can `await next()`.
-When the execution of the middleware resumes, you can work with the response again.
-
-```js
-engine.push(
-  createAsyncMiddleware(async (req, res, next) => {
-    res.result = 42;
-    await next();
-    /* Your return handler logic goes here */
-    addToMetrics(res);
-  }),
-);
-```
-
-You can freely mix callback-based and `async` middleware:
-
-```js
+// Throwing is preferred.
 engine.push(function (req, res, next, end) {
-  if (!isCached(req)) {
-    return next((cb) => {
-      insertIntoCache(res, cb);
-    });
-  }
-  res.result = getResultFromCache(req);
+  throw new Error();
+});
+
+// For backwards compatibility, you can also do this:
+engine.push(function (req, res, next, end) {
+  end(new Error());
+});
+
+engine.push(function (req, res, next, end) {
+  res.error = new Error();
   end();
 });
 
-engine.push(
-  createAsyncMiddleware(async (req, res, next) => {
-    res.result = 42;
-    await next();
-    addToMetrics(res);
-  }),
-);
+engine.push(function (req, res, next, end) {
+  res.error = new Error();
+  next();
+});
+
+// INCORRECT. Do not do this:
+engine.push(function (req, res, next, end) {
+  next(new Error());
+});
 ```
 
 ### Teardown
@@ -163,42 +149,4 @@ engine.destroy();
 // Calling any public method on the middleware other than `destroy()` itself
 // will throw an error.
 engine.handle(req);
-```
-
-### Gotchas
-
-Handle errors via `end(err)`, _NOT_ `next(err)`.
-
-```js
-/* INCORRECT */
-engine.push(function (req, res, next, end) {
-  next(new Error());
-});
-
-/* CORRECT */
-engine.push(function (req, res, next, end) {
-  end(new Error());
-});
-```
-
-However, `next()` will detect errors on the response object, and cause
-`end(res.error)` to be called.
-
-```js
-engine.push(function (req, res, next, end) {
-  res.error = new Error();
-  next(); /* This will cause end(res.error) to be called. */
-});
-```
-
-## Running tests
-
-Build the project if not already built:
-
-```bash
-yarn build
-```
-
-```bash
-yarn test
 ```
