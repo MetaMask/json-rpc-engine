@@ -389,39 +389,45 @@ export class JsonRpcEngine extends SafeEventEmitter {
       resolve,
     ] = getDeferredPromise<[unknown, boolean]>();
 
+    let ended = false;
     const end: JsonRpcEngineEndCallback = (err?: unknown) => {
       const error = err || res.error;
       if (error) {
         res.error = serializeError(error);
       }
+
       // True indicates that the request should end
+      ended = true;
       resolve([error, true]);
     };
 
     try {
       const returnHandler = await middleware(req, res, end);
 
-      if (res.error) {
-        end(res.error);
-      } else {
-        if (returnHandler) {
-          if (typeof returnHandler !== 'function') {
-            end(
-              new EthereumRpcError(
-                errorCodes.rpc.internal,
-                `JsonRpcEngine: return handlers must be functions. ` +
-                  `Received "${typeof returnHandler}" for request:\n${jsonify(
-                    req,
-                  )}`,
-                { request: req },
-              ),
-            );
+      // If the request is already ended, there's nothing to do.
+      if (!ended) {
+        if (res.error) {
+          end(res.error);
+        } else {
+          if (returnHandler) {
+            if (typeof returnHandler !== 'function') {
+              end(
+                new EthereumRpcError(
+                  errorCodes.rpc.internal,
+                  `JsonRpcEngine: return handlers must be functions. ` +
+                    `Received "${typeof returnHandler}" for request:\n${jsonify(
+                      req,
+                    )}`,
+                  { request: req },
+                ),
+              );
+            }
+            returnHandlers.push(returnHandler);
           }
-          returnHandlers.push(returnHandler);
-        }
 
-        // False indicates that the request should not end
-        resolve([null, false]);
+          // False indicates that the request should not end
+          resolve([null, false]);
+        }
       }
     } catch (error) {
       end(error);

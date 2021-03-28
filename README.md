@@ -69,6 +69,8 @@ They take no callbacks, and should only interact with the request and/or the res
 Middleware functions **must** return a falsy value or a function.
 If anything else is returned, the request will end with an error.
 
+If a middleware calls `end()`, its return value will be ignored.
+
 Engines can be nested by converting them to middleware using `JsonRpcEngine.asMiddleware()`:
 
 ```js

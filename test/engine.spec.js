@@ -444,6 +444,28 @@ describe('JsonRpcEngine', function () {
     });
   });
 
+  it('ignores return handler if ending request first', function (done) {
+    const engine = new JsonRpcEngine();
+
+    let sawReturnHandlerCalled = false;
+
+    engine.push(function (_req, res, end) {
+      res.result = 'foo';
+      end();
+      return () => {
+        sawReturnHandlerCalled = true;
+      };
+    });
+
+    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+
+    engine.handle(payload, (_err, res) => {
+      assert.strictEqual(res.result, 'foo', 'has correct result');
+      assert.ok(!sawReturnHandlerCalled, 'should not have called return handler');
+      done();
+    });
+  });
+
   it('calls back return handler even if async middleware rejects', function (done) {
     const engine = new JsonRpcEngine();
 
