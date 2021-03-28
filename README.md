@@ -56,12 +56,15 @@ engine.push(async function(req, res, next, end){
 By passing a _return handler_ to the `next` function, you can get a peek at the response before it is returned to the requester.
 
 ```js
-engine.push(function(req, res, next, end){
-  next(function(cb){
-    insertIntoCache(res, cb)
+engine.push((req, res, next, end) => {
+  next(() => {
+    await insertIntoCache(res)
   })
 })
 ```
+
+Return handlers can be synchronous or asynchronous.
+They take no callbacks, and should only interact with the request and/or the response.
 
 Engines can be nested by converting them to middleware using `JsonRpcEngine.asMiddleware()`:
 
