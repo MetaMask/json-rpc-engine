@@ -84,7 +84,7 @@ export type JsonRpcMiddleware<T, U> = (
   res: PendingJsonRpcResponse<U>,
   next: JsonRpcEngineNextCallback,
   end: JsonRpcEngineEndCallback
-) => void;
+) => void | Promise<void>;
 
 /**
  * A JSON-RPC request and response processor.
