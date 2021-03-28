@@ -10,18 +10,18 @@ describe('createScaffoldMiddleware', function () {
 
     const scaffold = {
       'method1': 'foo',
-      'method2': (_req, res, _next, end) => {
+      'method2': (_req, res, end) => {
         res.result = 42;
         end();
       },
-      'method3': (_req, res, _next, end) => {
+      'method3': (_req, res, end) => {
         res.error = new Error('method3');
         end();
       },
     };
 
     engine.push(createScaffoldMiddleware(scaffold));
-    engine.push((_req, res, _next, end) => {
+    engine.push((_req, res, end) => {
       res.result = 'passthrough';
       end();
     });

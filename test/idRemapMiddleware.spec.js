@@ -13,13 +13,14 @@ describe('idRemapMiddleware', function () {
       after: {},
     };
 
-    engine.push(function (req, res, next, _end) {
+    engine.push(function (req, res, _end) {
       observedIds.before.req = req.id;
       observedIds.before.res = res.id;
-      next();
     });
+
     engine.push(createIdRemapMiddleware());
-    engine.push(function (req, res, _next, end) {
+
+    engine.push(function (req, res, end) {
       observedIds.after.req = req.id;
       observedIds.after.res = res.id;
       // set result so it doesnt error

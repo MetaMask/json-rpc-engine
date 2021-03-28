@@ -10,7 +10,7 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
     let originalReq;
 
-    subengine.push(function (req, res, _next, end) {
+    subengine.push(function (req, res, end) {
       originalReq = req;
       res.result = 'saw subengine';
       end();
@@ -35,7 +35,7 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
     let originalReq;
 
-    subengine.push(function (req, res, _next, end) {
+    subengine.push(function (req, res, end) {
       originalReq = req;
       res.xyz = true;
       res.result = true;
@@ -61,7 +61,7 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
     let originalReq;
 
-    subengine.push(function (req, res, _next, end) {
+    subengine.push(function (req, res, end) {
       originalReq = req;
       req.xyz = true;
       res.result = true;
@@ -86,10 +86,10 @@ describe('asMiddleware', function () {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
-    subengine.push((_req, _res, next, _end) => next());
+    subengine.push((_req, _res, _end) => undefined);
 
     engine.push(subengine.asMiddleware());
-    engine.push((_req, res, _next, end) => {
+    engine.push((_req, res, end) => {
       res.result = true;
       end();
     });
@@ -103,18 +103,18 @@ describe('asMiddleware', function () {
     });
   });
 
-  it('handles next handler correctly when nested', function (done) {
+  it('handles return handler correctly when nested', function (done) {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
-    subengine.push((_req, res, next, _end) => {
-      next(() => {
+    subengine.push((_req, res, _end) => {
+      return () => {
         res.copy = res.result;
-      });
+      };
     });
 
     engine.push(subengine.asMiddleware());
-    engine.push((_req, res, _next, end) => {
+    engine.push((_req, res, end) => {
       res.result = true;
       end();
     });
@@ -128,17 +128,17 @@ describe('asMiddleware', function () {
     });
   });
 
-  it('handles next handler correctly when flat', function (done) {
+  it('handles return handler correctly when flat', function (done) {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
-    subengine.push((_req, res, next, _end) => {
-      next(() => {
+    subengine.push((_req, res, _end) => {
+      return () => {
         res.copy = res.result;
-      });
+      };
     });
 
-    subengine.push((_req, res, _next, end) => {
+    subengine.push((_req, res, end) => {
       res.result = true;
       end();
     });
@@ -158,7 +158,7 @@ describe('asMiddleware', function () {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
-    subengine.push(function (_req, _res, _next, _end) {
+    subengine.push(function (_req, _res, _end) {
       throw new Error('foo');
     });
 
@@ -174,18 +174,18 @@ describe('asMiddleware', function () {
     });
   });
 
-  it('handles next handler error correctly when nested', function (done) {
+  it('handles return handler error correctly when nested', function (done) {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
-    subengine.push((_req, _res, next, _end) => {
-      next(() => {
+    subengine.push((_req, _res, _end) => {
+      return () => {
         throw new Error('foo');
-      });
+      };
     });
 
     engine.push(subengine.asMiddleware());
-    engine.push((_req, res, _next, end) => {
+    engine.push((_req, res, end) => {
       res.result = true;
       end();
     });
@@ -199,17 +199,17 @@ describe('asMiddleware', function () {
     });
   });
 
-  it('handles next handler error correctly when flat', function (done) {
+  it('handles return handler error correctly when flat', function (done) {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
-    subengine.push((_req, _res, next, _end) => {
-      next(() => {
+    subengine.push((_req, _res, _end) => {
+      return () => {
         throw new Error('foo');
-      });
+      };
     });
 
-    subengine.push((_req, res, _next, end) => {
+    subengine.push((_req, res, end) => {
       res.result = true;
       end();
     });
