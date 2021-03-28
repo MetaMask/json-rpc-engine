@@ -34,9 +34,8 @@ describe('mergeMiddleware', function () {
 
     engine.push(mergeMiddleware([
       (_req, res, next, _end) => {
-        next((cb) => {
+        next(() => {
           res.copy = res.result;
-          cb();
         });
       },
       (_req, res, _next, end) => {
@@ -130,9 +129,8 @@ describe('mergeMiddleware', function () {
 
     engine.push(mergeMiddleware([
       (_req, res, next, _end) => {
-        next((cb) => {
+        next(() => {
           res.copy = res.result;
-          cb();
         });
       },
     ]));

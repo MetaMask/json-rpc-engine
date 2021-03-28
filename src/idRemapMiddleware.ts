@@ -7,10 +7,9 @@ export function createIdRemapMiddleware(): JsonRpcMiddleware<unknown, unknown> {
     const newId = getUniqueId();
     req.id = newId;
     res.id = newId;
-    next((done) => {
+    next(() => {
       req.id = originalId;
       res.id = originalId;
-      done();
     });
   };
 }
