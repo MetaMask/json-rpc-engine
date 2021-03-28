@@ -67,9 +67,7 @@ export interface PendingJsonRpcResponse<T> extends JsonRpcResponseBase {
 
 export type JsonRpcEngineCallbackError = Error | JsonRpcError | null;
 
-export type JsonRpcEngineReturnHandler = (
-  done: (error?: JsonRpcEngineCallbackError) => void
-) => void;
+export type JsonRpcEngineReturnHandler = () => void | Promise<void>;
 
 export type JsonRpcEngineNextCallback = (
   returnHandlerCallback?: JsonRpcEngineReturnHandler
@@ -186,13 +184,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
           return end(middlewareError as JsonRpcEngineCallbackError);
         }
 
-        return next(async (handlerCallback) => {
-          try {
-            await JsonRpcEngine._runReturnHandlers(returnHandlers);
-          } catch (error) {
-            return handlerCallback(error);
-          }
-          return handlerCallback();
+        return next(async () => {
+          await JsonRpcEngine._runReturnHandlers(returnHandlers);
         });
       } catch (error) {
         return end(error);
@@ -453,9 +446,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     handlers: JsonRpcEngineReturnHandler[],
   ): Promise<void> {
     for (const handler of handlers) {
-      await new Promise<void>((resolve, reject) => {
-        handler((err) => (err ? reject(err) : resolve()));
-      });
+      await handler();
     }
   }
 

@@ -346,9 +346,20 @@ describe('JsonRpcEngine', function () {
     const engine = new JsonRpcEngine();
 
     engine.push(function (_req, res, next, _end) {
-      next(function (cb) {
-        res.sawReturnHandler = true;
-        cb();
+      next(function () {
+        res.sawReturnHandler.push(3);
+      });
+    });
+
+    engine.push(function (_req, res, next, _end) {
+      next(async function () {
+        res.sawReturnHandler.push(2);
+      });
+    });
+
+    engine.push(function (_req, res, next, _end) {
+      next(function () {
+        res.sawReturnHandler = [1];
       });
     });
 
@@ -360,9 +371,13 @@ describe('JsonRpcEngine', function () {
     const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
 
     engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.ok(res.sawReturnHandler, 'saw return handler');
+      assert.ifError(err, 'should not error');
+      assert.ok(res, 'should have res');
+      assert.deepStrictEqual(
+        res.sawReturnHandler,
+        [1, 2, 3],
+        'should interact with all return handlers',
+      );
       done();
     });
   });
@@ -374,9 +389,8 @@ describe('JsonRpcEngine', function () {
 
     engine.push(function (_req, _res, next, _end) {
       events.push('1-next');
-      next(function (cb) {
+      next(function () {
         events.push('1-return');
-        cb();
       });
     });
 
@@ -384,9 +398,8 @@ describe('JsonRpcEngine', function () {
     engine.push(async function (_req, _res, next, _end) {
       events.push('2-next');
       await delay();
-      next(function (cb) {
+      next(function () {
         events.push('2-return');
-        cb();
       });
     });
 
@@ -415,9 +428,8 @@ describe('JsonRpcEngine', function () {
     let sawNextReturnHandlerCalled = false;
 
     engine.push(function (_req, _res, next, _end) {
-      next(function (cb) {
+      next(function () {
         sawNextReturnHandlerCalled = true;
-        cb();
       });
     });
 
@@ -440,9 +452,8 @@ describe('JsonRpcEngine', function () {
     let sawNextReturnHandlerCalled = false;
 
     engine.push(function (_req, _res, next, _end) {
-      next(function (cb) {
+      next(function () {
         sawNextReturnHandlerCalled = true;
-        cb();
       });
     });
 
@@ -463,7 +474,30 @@ describe('JsonRpcEngine', function () {
     const engine = new JsonRpcEngine();
 
     engine.push(function (_req, _res, next, _end) {
-      next(function (_cb) {
+      next(function () {
+        throw new Error('foo');
+      });
+    });
+
+    engine.push(function (_req, res, _next, end) {
+      res.result = 42;
+      end();
+    });
+
+    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+
+    engine.handle(payload, (err, _res) => {
+      assert.ok(err, 'did error');
+      assert.equal(err.message, 'foo', 'error has expected message');
+      done();
+    });
+  });
+
+  it('handles error in async next handler', function (done) {
+    const engine = new JsonRpcEngine();
+
+    engine.push(function (_req, _res, next, _end) {
+      next(async function () {
         throw new Error('foo');
       });
     });

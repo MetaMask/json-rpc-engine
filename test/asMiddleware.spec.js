@@ -108,9 +108,8 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
 
     subengine.push((_req, res, next, _end) => {
-      next((cb) => {
+      next(() => {
         res.copy = res.result;
-        cb();
       });
     });
 
@@ -134,9 +133,8 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
 
     subengine.push((_req, res, next, _end) => {
-      next((cb) => {
+      next(() => {
         res.copy = res.result;
-        cb();
       });
     });
 
@@ -181,7 +179,7 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
 
     subengine.push((_req, _res, next, _end) => {
-      next((_cb) => {
+      next(() => {
         throw new Error('foo');
       });
     });
@@ -206,7 +204,7 @@ describe('asMiddleware', function () {
     const subengine = new JsonRpcEngine();
 
     subengine.push((_req, _res, next, _end) => {
-      next((_cb) => {
+      next(() => {
         throw new Error('foo');
       });
     });
