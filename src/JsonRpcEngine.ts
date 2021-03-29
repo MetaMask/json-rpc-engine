@@ -489,7 +489,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     req: JsonRpcRequest<unknown>,
     res: PendingJsonRpcResponse<unknown>,
     endArg: unknown,
-  ) {
+  ): void {
     if (endArg instanceof Error) {
       throw new EthereumRpcError(
         errorCodes.rpc.internal,
@@ -523,7 +523,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     req: JsonRpcRequest<unknown>,
     res: PendingJsonRpcResponse<unknown>,
     error: unknown,
-  ) {
+  ): void {
     if (error instanceof Error) {
       if (error instanceof EthereumRpcError) {
         res.error = error;
