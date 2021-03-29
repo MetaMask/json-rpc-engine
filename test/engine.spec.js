@@ -222,7 +222,7 @@ describe('JsonRpcEngine', function () {
       assert.ok(res.error, 'should have error on response');
       assert.equal(res.error.code, -32603, 'should have expected error');
       assert.ok(
-        res.error.message.startsWith('JsonRpcEngine: return handlers must be functions.'),
+        res.error.message.startsWith('JsonRpcEngine: Return handlers must be functions.'),
         'should have expected error',
       );
       assert.ok(!res.result, 'should not have result on response');

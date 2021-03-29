@@ -71,15 +71,15 @@ type MaybePromise<T> = Promise<T> | T;
 
 export type JsonRpcEngineReturnHandler = () => MaybePromise<void>;
 
-export type JsonRpcEngineEndCallback = (
-  error?: JsonRpcEngineCallbackError
-) => void;
+export type JsonRpcEngineEndCallback = () => void;
 
 export type JsonRpcMiddleware<T, U> = (
   req: JsonRpcRequest<T>,
   res: PendingJsonRpcResponse<U>,
   end: JsonRpcEngineEndCallback
 ) => MaybePromise<void | JsonRpcEngineReturnHandler>;
+
+const NO_MANUAL_ERRORS_MESSAGE = `JsonRpcEngine: The response "error" property must not be set by middleware. Throw errors instead.`;
 
 /**
  * A JSON-RPC request and response processor.
@@ -169,24 +169,23 @@ export class JsonRpcEngine extends SafeEventEmitter {
    */
   asMiddleware(): JsonRpcMiddleware<unknown, unknown> {
     return async (req, res, end) => {
-      try {
-        const [
-          middlewareError,
-          isComplete,
-          returnHandlers,
-        ] = await JsonRpcEngine._runAllMiddleware(req, res, this._middleware);
+      const [
+        middlewareError,
+        isComplete,
+        returnHandlers,
+      ] = await JsonRpcEngine._runAllMiddleware(req, res, this._middleware);
 
-        if (isComplete) {
-          await JsonRpcEngine._runReturnHandlers(returnHandlers);
-          return end(middlewareError as JsonRpcEngineCallbackError);
+      if (isComplete) {
+        await JsonRpcEngine._runReturnHandlers(returnHandlers);
+        if (middlewareError) {
+          throw middlewareError;
         }
-
-        return async () => {
-          await JsonRpcEngine._runReturnHandlers(returnHandlers);
-        };
-      } catch (error) {
-        return end(error);
+        return end();
       }
+
+      return async () => {
+        await JsonRpcEngine._runReturnHandlers(returnHandlers);
+      };
     };
   }
 
@@ -389,37 +388,57 @@ export class JsonRpcEngine extends SafeEventEmitter {
       resolve,
     ] = getDeferredPromise<[unknown, boolean]>();
 
-    let ended = false;
-    const end: JsonRpcEngineEndCallback = (err?: unknown) => {
-      const error = err || res.error;
-      if (error) {
-        res.error = serializeError(error);
+    let endCalled = false;
+    const end: JsonRpcEngineEndCallback = (arg?: unknown) => {
+      if (arg instanceof Error) {
+        throw new EthereumRpcError(
+          errorCodes.rpc.internal,
+          `JsonRpcEngine: "end" callback must not be passed any values. Received an error. Throw errors instead.`,
+          { request: req, endCallbackCalledWith: arg },
+        );
+      } else if (arg) {
+        throw new EthereumRpcError(
+          errorCodes.rpc.internal,
+          `JsonRpcEngine: "end" callback must not be passed any values. Received "${typeof arg}".`,
+          { request: req, endCallbackCalledWith: arg },
+        );
+      }
+
+      if (res.error) {
+        throw new EthereumRpcError(
+          errorCodes.rpc.internal,
+          NO_MANUAL_ERRORS_MESSAGE,
+          { request: req, responseError: res.error },
+        );
       }
 
       // True indicates that the request should end
-      ended = true;
-      resolve([error, true]);
+      endCalled = true;
+      resolve([null, true]);
     };
 
     try {
       const returnHandler = await middleware(req, res, end);
 
       // If the request is already ended, there's nothing to do.
-      if (!ended) {
+      if (!endCalled) {
         if (res.error) {
-          end(res.error);
+          throw new EthereumRpcError(
+            errorCodes.rpc.internal,
+            NO_MANUAL_ERRORS_MESSAGE,
+            { request: req, responseError: res.error },
+          );
         } else {
           if (returnHandler) {
             if (typeof returnHandler !== 'function') {
-              end(
-                new EthereumRpcError(
-                  errorCodes.rpc.internal,
-                  `JsonRpcEngine: return handlers must be functions. ` +
-                    `Received "${typeof returnHandler}" for request:\n${jsonify(
-                      req,
-                    )}`,
-                  { request: req },
-                ),
+              console.log('INVALID RETURN HANDLER', req, returnHandler);
+              throw new EthereumRpcError(
+                errorCodes.rpc.internal,
+                `JsonRpcEngine: Return handlers must be functions. ` +
+                  `Received "${typeof returnHandler}" for request:\n${jsonify(
+                    req,
+                  )}`,
+                { request: req },
               );
             }
             returnHandlers.push(returnHandler);
@@ -430,7 +449,19 @@ export class JsonRpcEngine extends SafeEventEmitter {
         }
       }
     } catch (error) {
-      end(error);
+      if (error instanceof Error) {
+        // eslint-disable-next-line require-atomic-updates
+        res.error = error;
+      } else {
+        // eslint-disable-next-line require-atomic-updates
+        res.error = new EthereumRpcError(
+          errorCodes.rpc.internal,
+          `JsonRpcEngine: Middleware threw non-Error value.`,
+          { request: req, thrownValue: error },
+        );
+      }
+
+      resolve([res.error, true]);
     }
     return middlewareCallbackPromise;
   }
@@ -465,6 +496,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
         { request: req },
       );
     }
+
     if (!isComplete) {
       throw new EthereumRpcError(
         errorCodes.rpc.internal,

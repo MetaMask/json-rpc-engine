@@ -14,9 +14,8 @@ describe('createScaffoldMiddleware', function () {
         res.result = 42;
         end();
       },
-      'method3': (_req, res, end) => {
-        res.error = new Error('method3');
-        end();
+      'method3': (_req, _res, _end) => {
+        throw new Error('method3');
       },
     };
 
