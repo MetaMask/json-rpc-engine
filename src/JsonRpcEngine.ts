@@ -524,7 +524,6 @@ export class JsonRpcEngine extends SafeEventEmitter {
     res: PendingJsonRpcResponse<unknown>,
     error: unknown,
   ) {
-    /* eslint-disable require-atomic-updates */
     if (error instanceof Error) {
       if (error instanceof EthereumRpcError) {
         res.error = error;
@@ -543,7 +542,6 @@ export class JsonRpcEngine extends SafeEventEmitter {
         { request: req, thrownValue: error },
       );
     }
-    /* eslint-enable require-atomic-updates */
   }
 }
 
