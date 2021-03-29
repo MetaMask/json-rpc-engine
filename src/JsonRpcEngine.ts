@@ -514,8 +514,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
   }
 
   /**
-   * Processes an error thrown during middleware processing, and coerces it into
-   * a valid JSON-RPC error.
+   * Processes an error thrown during middleware processing, coerces it into
+   * a valid JSON-RPC error, and assigns it to the response.
+   * Attempts to preserve as many properties of the original error as possible.
    *
    * Must only be called in response to an error thrown by a consumer middleware.
    */
