@@ -67,11 +67,9 @@ export interface PendingJsonRpcResponse<T> extends JsonRpcResponseBase {
 
 export type JsonRpcEngineCallbackError = Error | JsonRpcError | null;
 
-export type JsonRpcEngineReturnHandler = () => void | Promise<void>;
+type MaybePromise<T> = Promise<T> | T;
 
-export type JsonRpcEngineNextCallback = (
-  returnHandlerCallback?: JsonRpcEngineReturnHandler
-) => void;
+export type JsonRpcEngineReturnHandler = () => MaybePromise<void>;
 
 export type JsonRpcEngineEndCallback = (
   error?: JsonRpcEngineCallbackError
@@ -80,9 +78,8 @@ export type JsonRpcEngineEndCallback = (
 export type JsonRpcMiddleware<T, U> = (
   req: JsonRpcRequest<T>,
   res: PendingJsonRpcResponse<U>,
-  next: JsonRpcEngineNextCallback,
   end: JsonRpcEngineEndCallback
-) => void | Promise<void>;
+) => MaybePromise<void | JsonRpcEngineReturnHandler>;
 
 /**
  * A JSON-RPC request and response processor.
@@ -171,7 +168,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @returns This engine as a middleware function.
    */
   asMiddleware(): JsonRpcMiddleware<unknown, unknown> {
-    return async (req, res, next, end) => {
+    return async (req, res, end) => {
       try {
         const [
           middlewareError,
@@ -184,9 +181,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
           return end(middlewareError as JsonRpcEngineCallbackError);
         }
 
-        return next(async () => {
+        return async () => {
           await JsonRpcEngine._runReturnHandlers(returnHandlers);
-        });
+        };
       } catch (error) {
         return end(error);
       }
@@ -387,51 +384,51 @@ export class JsonRpcEngine extends SafeEventEmitter {
     middleware: JsonRpcMiddleware<unknown, unknown>,
     returnHandlers: JsonRpcEngineReturnHandler[],
   ): Promise<[unknown, boolean]> {
-    let resolve: (value: [unknown, boolean]) => void;
-    const middlewareCallbackPromise = new Promise<[unknown, boolean]>(
-      (_resolve) => {
-        resolve = _resolve;
-      },
-    );
+    const [
+      middlewareCallbackPromise,
+      resolve,
+    ] = getDeferredPromise<[unknown, boolean]>();
 
+    let ended = false;
     const end: JsonRpcEngineEndCallback = (err?: unknown) => {
       const error = err || res.error;
       if (error) {
         res.error = serializeError(error);
       }
+
       // True indicates that the request should end
+      ended = true;
       resolve([error, true]);
     };
 
-    const next: JsonRpcEngineNextCallback = (
-      returnHandler?: JsonRpcEngineReturnHandler,
-    ) => {
-      if (res.error) {
-        end(res.error);
-      } else {
-        if (returnHandler) {
-          if (typeof returnHandler !== 'function') {
-            end(
-              new EthereumRpcError(
-                errorCodes.rpc.internal,
-                `JsonRpcEngine: "next" return handlers must be functions. ` +
-                  `Received "${typeof returnHandler}" for request:\n${jsonify(
-                    req,
-                  )}`,
-                { request: req },
-              ),
-            );
-          }
-          returnHandlers.push(returnHandler);
-        }
-
-        // False indicates that the request should not end
-        resolve([null, false]);
-      }
-    };
-
     try {
-      await middleware(req, res, next, end);
+      const returnHandler = await middleware(req, res, end);
+
+      // If the request is already ended, there's nothing to do.
+      if (!ended) {
+        if (res.error) {
+          end(res.error);
+        } else {
+          if (returnHandler) {
+            if (typeof returnHandler !== 'function') {
+              end(
+                new EthereumRpcError(
+                  errorCodes.rpc.internal,
+                  `JsonRpcEngine: return handlers must be functions. ` +
+                    `Received "${typeof returnHandler}" for request:\n${jsonify(
+                      req,
+                    )}`,
+                  { request: req },
+                ),
+              );
+            }
+            returnHandlers.push(returnHandler);
+          }
+
+          // False indicates that the request should not end
+          resolve([null, false]);
+        }
+      }
     } catch (error) {
       end(error);
     }
@@ -480,4 +477,12 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
 function jsonify(request: JsonRpcRequest<unknown>): string {
   return JSON.stringify(request, null, 2);
+}
+
+function getDeferredPromise<T>(): [ Promise<T>, (value: T) => void] {
+  let resolve: any;
+  const promise: Promise<T> = new Promise((_resolve) => {
+    resolve = _resolve;
+  });
+  return [promise, resolve];
 }

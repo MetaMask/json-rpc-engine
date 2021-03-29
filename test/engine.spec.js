@@ -40,7 +40,7 @@ describe('JsonRpcEngine', function () {
   it('handle: basic middleware test 1', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = 42;
       end();
     });
@@ -58,7 +58,7 @@ describe('JsonRpcEngine', function () {
   it('handle: basic middleware test 2', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (req, res, _next, end) {
+    engine.push(function (req, res, end) {
       req.method = 'banana';
       res.result = 42;
       end();
@@ -78,7 +78,7 @@ describe('JsonRpcEngine', function () {
   it('handle (async): basic middleware test', async function () {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = 42;
       end();
     });
@@ -93,7 +93,7 @@ describe('JsonRpcEngine', function () {
   it('allow null result', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = null;
       end();
     });
@@ -111,12 +111,11 @@ describe('JsonRpcEngine', function () {
   it('interacting middleware test', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (req, _res, next, _end) {
+    engine.push(function (req, _res, _end) {
       req.resultShouldBe = 42;
-      next();
     });
 
-    engine.push(function (req, res, _next, end) {
+    engine.push(function (req, res, end) {
       res.result = req.resultShouldBe;
       end();
     });
@@ -134,12 +133,12 @@ describe('JsonRpcEngine', function () {
   it('middleware ending request before all middlewares applied', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = 42;
       end();
     });
 
-    engine.push(function (_req, _res, _next, _end) {
+    engine.push(function (_req, _res, _end) {
       assert.fail('should not have called second middleware');
     });
 
@@ -156,7 +155,7 @@ describe('JsonRpcEngine', function () {
   it('erroring middleware test: end(error)', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, _res, _next, end) {
+    engine.push(function (_req, _res, end) {
       end(new Error('no bueno'));
     });
 
@@ -171,12 +170,11 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('erroring middleware test: res.error -> next()', function (done) {
+  it('erroring middleware test: res.error -> return', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, next, _end) {
+    engine.push(function (_req, res, _end) {
       res.error = new Error('no bueno');
-      next();
     });
 
     const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
@@ -193,7 +191,7 @@ describe('JsonRpcEngine', function () {
   it('erroring middleware test: res.error -> end()', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.error = new Error('no bueno');
       end();
     });
@@ -209,11 +207,11 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('erroring middleware test: non-function passsed to next()', function (done) {
+  it('erroring middleware test: returning truthy non-function', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, _res, next, _end) {
-      next(true);
+    engine.push(function (_req, _res, _end) {
+      return true;
     });
 
     const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
@@ -224,7 +222,7 @@ describe('JsonRpcEngine', function () {
       assert.ok(res.error, 'should have error on response');
       assert.equal(res.error.code, -32603, 'should have expected error');
       assert.ok(
-        res.error.message.startsWith('JsonRpcEngine: "next" return handlers must be functions.'),
+        res.error.message.startsWith('JsonRpcEngine: return handlers must be functions.'),
         'should have expected error',
       );
       assert.ok(!res.result, 'should not have result on response');
@@ -246,7 +244,7 @@ describe('JsonRpcEngine', function () {
   it('handle: batch payloads', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (req, res, _next, end) {
+    engine.push(function (req, res, end) {
       if (req.id === 4) {
         delete res.result;
         res.error = new Error('foobar');
@@ -280,7 +278,7 @@ describe('JsonRpcEngine', function () {
   it('handle: batch payloads (async signature)', async function () {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (req, res, _next, end) {
+    engine.push(function (req, res, end) {
       if (req.id === 4) {
         delete res.result;
         res.error = new Error('foobar');
@@ -311,7 +309,7 @@ describe('JsonRpcEngine', function () {
   it('handle: batch payload with bad request object', async function () {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (req, res, _next, end) {
+    engine.push(function (req, res, end) {
       res.result = req.id;
       return end();
     });
@@ -345,25 +343,25 @@ describe('JsonRpcEngine', function () {
   it('return handlers test', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, next, _end) {
-      next(function () {
+    engine.push(function (_req, res, _end) {
+      return () => {
         res.sawReturnHandler.push(3);
-      });
+      };
     });
 
-    engine.push(function (_req, res, next, _end) {
-      next(async function () {
+    engine.push(function (_req, res, _end) {
+      return () => {
         res.sawReturnHandler.push(2);
-      });
+      };
     });
 
-    engine.push(function (_req, res, next, _end) {
-      next(function () {
+    engine.push(function (_req, res, _end) {
+      return () => {
         res.sawReturnHandler = [1];
-      });
+      };
     });
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = true;
       end();
     });
@@ -387,23 +385,23 @@ describe('JsonRpcEngine', function () {
 
     const events = [];
 
-    engine.push(function (_req, _res, next, _end) {
-      events.push('1-next');
-      next(function () {
+    engine.push(function (_req, _res, _end) {
+      events.push('1-middleware');
+      return () => {
         events.push('1-return');
-      });
+      };
     });
 
     // Async middleware function
-    engine.push(async function (_req, _res, next, _end) {
-      events.push('2-next');
+    engine.push(async function (_req, _res, _end) {
+      events.push('2-middleware');
       await delay();
-      next(function () {
+      return () => {
         events.push('2-return');
-      });
+      };
     });
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       events.push('3-end');
       res.result = true;
       end();
@@ -413,8 +411,8 @@ describe('JsonRpcEngine', function () {
 
     engine.handle(payload, function (err, _res) {
       assert.ifError(err, 'did not error');
-      assert.equal(events[0], '1-next', '(event 0) was "1-next"');
-      assert.equal(events[1], '2-next', '(event 1) was "2-next"');
+      assert.equal(events[0], '1-middleware', '(event 0) was "1-middleware"');
+      assert.equal(events[1], '2-middleware', '(event 1) was "2-middleware"');
       assert.equal(events[2], '3-end', '(event 2) was "3-end"');
       assert.equal(events[3], '2-return', '(event 3) was "2-return"');
       assert.equal(events[4], '1-return', '(event 4) was "1-return"');
@@ -422,18 +420,18 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('calls back next handler even if error', function (done) {
+  it('calls back return handler even if error', function (done) {
     const engine = new JsonRpcEngine();
 
-    let sawNextReturnHandlerCalled = false;
+    let sawReturnHandlerCalled = false;
 
-    engine.push(function (_req, _res, next, _end) {
-      next(function () {
-        sawNextReturnHandlerCalled = true;
-      });
+    engine.push(function (_req, _res, _end) {
+      return () => {
+        sawReturnHandlerCalled = true;
+      };
     });
 
-    engine.push(function (_req, _res, _next, end) {
+    engine.push(function (_req, _res, end) {
       end(new Error('boom'));
     });
 
@@ -441,23 +439,45 @@ describe('JsonRpcEngine', function () {
 
     engine.handle(payload, (err, _res) => {
       assert.ok(err, 'did error');
-      assert.ok(sawNextReturnHandlerCalled, 'saw next return handler called');
+      assert.ok(sawReturnHandlerCalled, 'saw return handler called');
       done();
     });
   });
 
-  it('calls back next handler even if async middleware rejects', function (done) {
+  it('ignores return handler if ending request first', function (done) {
     const engine = new JsonRpcEngine();
 
-    let sawNextReturnHandlerCalled = false;
+    let sawReturnHandlerCalled = false;
 
-    engine.push(function (_req, _res, next, _end) {
-      next(function () {
-        sawNextReturnHandlerCalled = true;
-      });
+    engine.push(function (_req, res, end) {
+      res.result = 'foo';
+      end();
+      return () => {
+        sawReturnHandlerCalled = true;
+      };
     });
 
-    engine.push(async function (_req, _res, _next, _end) {
+    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+
+    engine.handle(payload, (_err, res) => {
+      assert.strictEqual(res.result, 'foo', 'has correct result');
+      assert.ok(!sawReturnHandlerCalled, 'should not have called return handler');
+      done();
+    });
+  });
+
+  it('calls back return handler even if async middleware rejects', function (done) {
+    const engine = new JsonRpcEngine();
+
+    let sawReturnHandlerCalled = false;
+
+    engine.push(function (_req, _res, _end) {
+      return () => {
+        sawReturnHandlerCalled = true;
+      };
+    });
+
+    engine.push(async function (_req, _res, _end) {
       throw new Error('boom');
     });
 
@@ -465,21 +485,21 @@ describe('JsonRpcEngine', function () {
 
     engine.handle(payload, (err, _res) => {
       assert.ok(err, 'did error');
-      assert.ok(sawNextReturnHandlerCalled, 'saw next return handler called');
+      assert.ok(sawReturnHandlerCalled, 'saw return handler called');
       done();
     });
   });
 
-  it('handles error in next handler', function (done) {
+  it('handles error in return handler', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, _res, next, _end) {
-      next(function () {
+    engine.push(function (_req, _res, _end) {
+      return () => {
         throw new Error('foo');
-      });
+      };
     });
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = 42;
       end();
     });
@@ -493,16 +513,16 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('handles error in async next handler', function (done) {
+  it('handles error in async return handler', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, _res, next, _end) {
-      next(async function () {
+    engine.push(function (_req, _res, _end) {
+      return () => {
         throw new Error('foo');
-      });
+      };
     });
 
-    engine.push(function (_req, res, _next, end) {
+    engine.push(function (_req, res, end) {
       res.result = 42;
       end();
     });
@@ -519,9 +539,8 @@ describe('JsonRpcEngine', function () {
   it('handles failure to end request', function (done) {
     const engine = new JsonRpcEngine();
 
-    engine.push(function (_req, res, next, _end) {
+    engine.push(function (_req, res, _end) {
       res.result = 42;
-      next();
     });
 
     const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };

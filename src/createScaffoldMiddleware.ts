@@ -5,15 +5,15 @@ type ScaffoldMiddlewareHandler<T, U> = JsonRpcMiddleware<T, U> | Json;
 export function createScaffoldMiddleware(handlers: {
   [methodName: string]: ScaffoldMiddlewareHandler<unknown, unknown>;
 }): JsonRpcMiddleware<unknown, unknown> {
-  return (req, res, next, end) => {
+  return (req, res, end) => {
     const handler = handlers[req.method];
     // if no handler, return
     if (handler === undefined) {
-      return next();
+      return undefined;
     }
     // if handler is fn, call as middleware
     if (typeof handler === 'function') {
-      return handler(req, res, next, end);
+      return handler(req, res, end);
     }
     // if handler is some other value, use as result
     (res as JsonRpcSuccess<unknown>).result = handler;

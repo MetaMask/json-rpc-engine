@@ -10,7 +10,7 @@ describe('mergeMiddleware', function () {
     let originalReq;
 
     engine.push(mergeMiddleware([
-      function (req, res, _next, end) {
+      function (req, res, end) {
         originalReq = req;
         res.result = 'saw merged middleware';
         end();
@@ -29,16 +29,16 @@ describe('mergeMiddleware', function () {
     });
   });
 
-  it('handles next handler correctly for multiple merged', function (done) {
+  it('handles return handler correctly for multiple merged', function (done) {
     const engine = new JsonRpcEngine();
 
     engine.push(mergeMiddleware([
-      (_req, res, next, _end) => {
-        next(() => {
+      (_req, res, _end) => {
+        return () => {
           res.copy = res.result;
-        });
+        };
       },
-      (_req, res, _next, end) => {
+      (_req, res, end) => {
         res.result = true;
         end();
       },
@@ -59,7 +59,7 @@ describe('mergeMiddleware', function () {
     let originalReq;
 
     engine.push(mergeMiddleware([
-      function (req, res, _next, end) {
+      function (req, res, end) {
         originalReq = req;
         res.xyz = true;
         res.result = true;
@@ -84,7 +84,7 @@ describe('mergeMiddleware', function () {
     let originalReq;
 
     engine.push(mergeMiddleware([
-      function (req, res, _next, end) {
+      function (req, res, end) {
         originalReq = req;
         req.xyz = true;
         res.result = true;
@@ -108,9 +108,9 @@ describe('mergeMiddleware', function () {
     const engine = new JsonRpcEngine();
 
     engine.push(mergeMiddleware([
-      (_req, _res, next, _end) => next(),
+      (_req, _res, _end) => undefined,
     ]));
-    engine.push((_req, res, _next, end) => {
+    engine.push((_req, res, end) => {
       res.result = true;
       end();
     });
@@ -124,17 +124,17 @@ describe('mergeMiddleware', function () {
     });
   });
 
-  it('handles next handler correctly across middleware', function (done) {
+  it('handles return handler correctly across middleware', function (done) {
     const engine = new JsonRpcEngine();
 
     engine.push(mergeMiddleware([
-      (_req, res, next, _end) => {
-        next(() => {
+      (_req, res, _end) => {
+        return () => {
           res.copy = res.result;
-        });
+        };
       },
     ]));
-    engine.push((_req, res, _next, end) => {
+    engine.push((_req, res, end) => {
       res.result = true;
       end();
     });
