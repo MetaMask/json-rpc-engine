@@ -646,8 +646,9 @@ describe('JsonRpcEngine', function () {
 
     engine.handle(payload, (err, res) => {
       assert.ok(err, 'should have errored');
-      assert.ok(
-        err.message.startsWith('JsonRpcEngine: Nothing ended request:'),
+      assert.strictEqual(
+        err.message,
+        'JsonRpcEngine: Nothing ended request.',
         'should have expected error message',
       );
       assert.ok(!res.result, 'should not have result');

@@ -80,7 +80,17 @@ export type JsonRpcMiddleware<T, U> = (
   end: JsonRpcEngineEndCallback
 ) => MaybePromise<void | JsonRpcEngineReturnHandler>;
 
-const NO_MANUAL_ERRORS_MESSAGE = `JsonRpcEngine: The response "error" property must not be set by middleware. Throw errors instead.`;
+const errorMessages = {
+  invalidReturnHandler: (value: unknown) => `JsonRpcEngine: Return handlers must be functions. Received: ${typeof value}.`,
+  noAssignmentToResponse: `JsonRpcEngine: The response "error" property must not be directly assigned. Throw errors instead.`,
+  noErrorOrResult: `JsonRpcEngine: Response has no error or result`,
+  noErrorsToEnd: `JsonRpcEngine: "end" callback must not be passed any values. Received an error. Throw errors instead.`,
+  nonObjectRequest: (request: unknown) => `Requests must be plain objects. Received: ${typeof request}`,
+  nonStringMethod: (method: unknown) => `Must specify a string method. Received: ${typeof method}`,
+  noValuesToEnd: (value: unknown) => `JsonRpcEngine: "end" callback must not be passed any values. Received: ${typeof value}.`,
+  nothingEndedRequest: `JsonRpcEngine: Nothing ended request.`,
+  threwNonError: `JsonRpcEngine: Middleware threw non-Error value.`,
+};
 
 /**
  * A JSON-RPC request and response processor.
@@ -264,7 +274,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     ) {
       const error = new EthereumRpcError(
         errorCodes.rpc.invalidRequest,
-        `Requests must be plain objects. Received: ${typeof callerReq}`,
+        errorMessages.nonObjectRequest(callerReq),
         { request: callerReq },
       );
       return cb(error, { id: undefined, jsonrpc: '2.0', error });
@@ -273,7 +283,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     if (typeof callerReq.method !== 'string') {
       const error = new EthereumRpcError(
         errorCodes.rpc.invalidRequest,
-        `Must specify a string method. Received: ${typeof callerReq.method}`,
+        errorMessages.nonStringMethod(callerReq.method),
         { request: callerReq },
       );
       return cb(error, { id: callerReq.id, jsonrpc: '2.0', error });
@@ -391,29 +401,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
     let endCalled = false;
     const end: JsonRpcEngineEndCallback = (arg?: unknown) => {
-      if (arg instanceof Error) {
-        throw new EthereumRpcError(
-          errorCodes.rpc.internal,
-          `JsonRpcEngine: "end" callback must not be passed any values. Received an error. Throw errors instead.`,
-          { request: req, endCallbackCalledWith: arg },
-        );
-      } else if (arg) {
-        throw new EthereumRpcError(
-          errorCodes.rpc.internal,
-          `JsonRpcEngine: "end" callback must not be passed any values. Received "${typeof arg}".`,
-          { request: req, endCallbackCalledWith: arg },
-        );
-      }
-
-      if (res.error) {
-        throw new EthereumRpcError(
-          errorCodes.rpc.internal,
-          NO_MANUAL_ERRORS_MESSAGE,
-          { request: req, responseError: res.error },
-        );
-      }
-
-      // True indicates that the request should end
+      JsonRpcEngine._validateEndState(req, res, arg);
       endCalled = true;
       resolve([null, true]);
     };
@@ -421,12 +409,14 @@ export class JsonRpcEngine extends SafeEventEmitter {
     try {
       const returnHandler = await middleware(req, res, end);
 
-      // If the request is already ended, there's nothing to do.
+      // If "end" was not called, validate the response state, collect the
+      // middleware's return handler (if any), and indicate that the next
+      // middleware should be called.
       if (!endCalled) {
         if (res.error) {
           throw new EthereumRpcError(
             errorCodes.rpc.internal,
-            NO_MANUAL_ERRORS_MESSAGE,
+            errorMessages.noAssignmentToResponse,
             { request: req, responseError: res.error },
           );
         } else {
@@ -434,42 +424,18 @@ export class JsonRpcEngine extends SafeEventEmitter {
             if (typeof returnHandler !== 'function') {
               throw new EthereumRpcError(
                 errorCodes.rpc.internal,
-                `JsonRpcEngine: Return handlers must be functions. ` +
-                  `Received "${typeof returnHandler}" for request:\n${jsonify(
-                    req,
-                  )}`,
+                errorMessages.invalidReturnHandler(returnHandler),
                 { request: req },
               );
             }
             returnHandlers.push(returnHandler);
           }
 
-          // False indicates that the request should not end
           resolve([null, false]);
         }
       }
     } catch (error) {
-      /* eslint-disable require-atomic-updates */
-      if (error instanceof Error) {
-        if (error instanceof EthereumRpcError) {
-          res.error = error;
-        } else {
-          const { code } = error as any;
-          res.error = new EthereumRpcError(
-            isValidCode(code) ? code : errorCodes.rpc.internal,
-            error.message,
-            { request: req, originalError: error },
-          );
-        }
-      } else {
-        res.error = new EthereumRpcError(
-          errorCodes.rpc.internal,
-          `JsonRpcEngine: Middleware threw non-Error value.`,
-          { request: req, thrownValue: error },
-        );
-      }
-      /* eslint-enable require-atomic-updates */
-
+      JsonRpcEngine._processMiddlewareError(req, res, error);
       resolve([res.error, true]);
     }
     return middlewareCallbackPromise;
@@ -499,9 +465,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     if (!('result' in res) && !('error' in res)) {
       throw new EthereumRpcError(
         errorCodes.rpc.internal,
-        `JsonRpcEngine: Response has no error or result for request:\n${jsonify(
-          req,
-        )}`,
+        errorMessages.noErrorOrResult,
         { request: req },
       );
     }
@@ -509,15 +473,78 @@ export class JsonRpcEngine extends SafeEventEmitter {
     if (!isComplete) {
       throw new EthereumRpcError(
         errorCodes.rpc.internal,
-        `JsonRpcEngine: Nothing ended request:\n${jsonify(req)}`,
+        errorMessages.nothingEndedRequest,
         { request: req },
       );
     }
   }
-}
 
-function jsonify(request: JsonRpcRequest<unknown>): string {
-  return JSON.stringify(request, null, 2);
+  /**
+   * Throws an appropriate error if the given response has its error property
+   * set, or if the given argument to an "end" callback is truthy.
+   *
+   * Must only be called in the internal implementation of an "end" callback.
+   */
+  private static _validateEndState(
+    req: JsonRpcRequest<unknown>,
+    res: PendingJsonRpcResponse<unknown>,
+    endArg: unknown,
+  ) {
+    if (endArg instanceof Error) {
+      throw new EthereumRpcError(
+        errorCodes.rpc.internal,
+        errorMessages.noErrorsToEnd,
+        { request: req, endCallbackCalledWith: endArg },
+      );
+    } else if (endArg) {
+      throw new EthereumRpcError(
+        errorCodes.rpc.internal,
+        errorMessages.noValuesToEnd(endArg),
+        { request: req, endCallbackCalledWith: endArg },
+      );
+    }
+
+    if (res.error) {
+      throw new EthereumRpcError(
+        errorCodes.rpc.internal,
+        errorMessages.noAssignmentToResponse,
+        { request: req, responseError: res.error },
+      );
+    }
+  }
+
+  /**
+   * Processes an error thrown during middleware processing, and coerces it into
+   * a valid JSON-RPC error.
+   *
+   * Must only be called in response to an error thrown by a consumer middleware.
+   */
+  private static _processMiddlewareError(
+    req: JsonRpcRequest<unknown>,
+    res: PendingJsonRpcResponse<unknown>,
+    error: unknown,
+  ) {
+    /* eslint-disable require-atomic-updates */
+    if (error instanceof Error) {
+      if (error instanceof EthereumRpcError) {
+        res.error = error;
+      } else {
+        const { code } = error as any;
+        res.error = new EthereumRpcError(
+          isValidCode(code) ? code : errorCodes.rpc.internal,
+          error.message,
+          { request: req, originalError: error },
+        );
+      }
+    } else {
+      res.error = new EthereumRpcError(
+        errorCodes.rpc.internal,
+        errorMessages.threwNonError,
+        { request: req, thrownValue: error },
+      );
+    }
+    /* eslint-enable require-atomic-updates */
+  }
 }
 
 function getDeferredPromise<T>(): [ Promise<T>, (value: T) => void] {

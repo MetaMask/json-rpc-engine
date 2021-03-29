@@ -43,6 +43,8 @@ engine.push(function (req, res, end) {
 });
 ```
 
+`end()` **must** be called once during middleware processing, or an internal error will be returned.
+
 Middleware functions can be `async`:
 
 ```js
