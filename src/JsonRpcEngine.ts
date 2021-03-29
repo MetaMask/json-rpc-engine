@@ -1,5 +1,6 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
+import { isValidCode } from 'eth-rpc-errors/dist/utils';
 
 type Maybe<T> = Partial<T> | null | undefined;
 
@@ -431,7 +432,6 @@ export class JsonRpcEngine extends SafeEventEmitter {
         } else {
           if (returnHandler) {
             if (typeof returnHandler !== 'function') {
-              console.log('INVALID RETURN HANDLER', req, returnHandler);
               throw new EthereumRpcError(
                 errorCodes.rpc.internal,
                 `JsonRpcEngine: Return handlers must be functions. ` +
@@ -449,17 +449,26 @@ export class JsonRpcEngine extends SafeEventEmitter {
         }
       }
     } catch (error) {
+      /* eslint-disable require-atomic-updates */
       if (error instanceof Error) {
-        // eslint-disable-next-line require-atomic-updates
-        res.error = error;
+        if (error instanceof EthereumRpcError) {
+          res.error = error;
+        } else {
+          const { code } = error as any;
+          res.error = new EthereumRpcError(
+            isValidCode(code) ? code : errorCodes.rpc.internal,
+            error.message,
+            { request: req, originalError: error },
+          );
+        }
       } else {
-        // eslint-disable-next-line require-atomic-updates
         res.error = new EthereumRpcError(
           errorCodes.rpc.internal,
           `JsonRpcEngine: Middleware threw non-Error value.`,
           { request: req, thrownValue: error },
         );
       }
+      /* eslint-enable require-atomic-updates */
 
       resolve([res.error, true]);
     }
