@@ -81,13 +81,13 @@ export type JsonRpcMiddleware<T, U> = (
 ) => MaybePromise<void | JsonRpcEngineReturnHandler>;
 
 const errorMessages = {
-  invalidReturnHandler: (value: unknown) => `JsonRpcEngine: Return handlers must be functions. Received: ${typeof value}.`,
+  invalidReturnHandler: (value: unknown) => `JsonRpcEngine: Return handlers must be functions. Received: ${typeof value}`,
   noAssignmentToResponse: `JsonRpcEngine: The response "error" property must not be directly assigned. Throw errors instead.`,
   noErrorOrResult: `JsonRpcEngine: Response has no error or result`,
   noErrorsToEnd: `JsonRpcEngine: "end" callback must not be passed any values. Received an error. Throw errors instead.`,
   nonObjectRequest: (request: unknown) => `Requests must be plain objects. Received: ${typeof request}`,
   nonStringMethod: (method: unknown) => `Must specify a string method. Received: ${typeof method}`,
-  noValuesToEnd: (value: unknown) => `JsonRpcEngine: "end" callback must not be passed any values. Received: ${typeof value}.`,
+  noValuesToEnd: (value: unknown) => `JsonRpcEngine: "end" callback must not be passed any values. Received: ${typeof value}`,
   nothingEndedRequest: `JsonRpcEngine: Nothing ended request.`,
   threwNonError: `JsonRpcEngine: Middleware threw non-Error value.`,
 };
