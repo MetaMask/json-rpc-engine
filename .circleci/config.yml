@@ -10,6 +10,7 @@ workflows:
       - test-lint:
           requires:
             - prep-deps
+            - prep-build
       - test-unit:
           requires:
             - prep-deps
