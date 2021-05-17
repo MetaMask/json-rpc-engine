@@ -14,8 +14,8 @@ Build a stack of JSON-RPC processors by pushing middleware to the engine.
 
 ```js
 engine.push(function (req, res, next, end) {
-    res.result = 42;
-    end();
+  res.result = 42;
+  end();
 });
 ```
 
@@ -25,7 +25,7 @@ Requests are handled asynchronously, stepping down the stack until complete.
 let request = { id: 1, jsonrpc: '2.0', method: 'hello' };
 
 engine.handle(request, function (err, response) {
-    // Do something with response.result, or handle response.error
+  // Do something with response.result, or handle response.error
 });
 
 // There is also a Promise signature
@@ -37,9 +37,9 @@ They can let processing continue down the stack with `next()`, or complete the r
 
 ```js
 engine.push(function (req, res, next, end) {
-    if (req.skipCache) return next();
-    res.result = getResultFromCache(req);
-    end();
+  if (req.skipCache) return next();
+  res.result = getResultFromCache(req);
+  end();
 });
 ```
 
@@ -47,9 +47,9 @@ By passing a _return handler_ to the `next` function, you can get a peek at the 
 
 ```js
 engine.push(function (req, res, next, end) {
-    next(function (cb) {
-        insertIntoCache(res, cb);
-    });
+  next(function (cb) {
+    insertIntoCache(res, cb);
+  });
 });
 ```
 
@@ -70,10 +70,10 @@ const { createAsyncMiddleware } = require('json-rpc-engine');
 
 let engine = new RpcEngine();
 engine.push(
-    createAsyncMiddleware(async (req, res, next) => {
-        res.result = 42;
-        next();
-    })
+  createAsyncMiddleware(async (req, res, next) => {
+    res.result = 42;
+    next();
+  }),
 );
 ```
 
@@ -82,10 +82,10 @@ Instead, the request ends if the middleware returns without calling `next()`:
 
 ```js
 engine.push(
-    createAsyncMiddleware(async (req, res, next) => {
-        res.result = 42;
-        /* The request will end when this returns */
-    })
+  createAsyncMiddleware(async (req, res, next) => {
+    res.result = 42;
+    /* The request will end when this returns */
+  }),
 );
 ```
 
@@ -95,12 +95,12 @@ When the execution of the middleware resumes, you can work with the response aga
 
 ```js
 engine.push(
-    createAsyncMiddleware(async (req, res, next) => {
-        res.result = 42;
-        await next();
-        /* Your return handler logic goes here */
-        addToMetrics(res);
-    })
+  createAsyncMiddleware(async (req, res, next) => {
+    res.result = 42;
+    await next();
+    /* Your return handler logic goes here */
+    addToMetrics(res);
+  }),
 );
 ```
 
@@ -108,21 +108,21 @@ You can freely mix callback-based and `async` middleware:
 
 ```js
 engine.push(function (req, res, next, end) {
-    if (!isCached(req)) {
-        return next((cb) => {
-            insertIntoCache(res, cb);
-        });
-    }
-    res.result = getResultFromCache(req);
-    end();
+  if (!isCached(req)) {
+    return next((cb) => {
+      insertIntoCache(res, cb);
+    });
+  }
+  res.result = getResultFromCache(req);
+  end();
 });
 
 engine.push(
-    createAsyncMiddleware(async (req, res, next) => {
-        res.result = 42;
-        await next();
-        addToMetrics(res);
-    })
+  createAsyncMiddleware(async (req, res, next) => {
+    res.result = 42;
+    await next();
+    addToMetrics(res);
+  }),
 );
 ```
 
@@ -133,12 +133,12 @@ Handle errors via `end(err)`, _NOT_ `next(err)`.
 ```js
 /* INCORRECT */
 engine.push(function (req, res, next, end) {
-    next(new Error());
+  next(new Error());
 });
 
 /* CORRECT */
 engine.push(function (req, res, next, end) {
-    end(new Error());
+  end(new Error());
 });
 ```
 
@@ -147,8 +147,8 @@ However, `next()` will detect errors on the response object, and cause
 
 ```js
 engine.push(function (req, res, next, end) {
-    res.error = new Error();
-    next(); /* This will cause end(res.error) to be called. */
+  res.error = new Error();
+  next(); /* This will cause end(res.error) to be called. */
 });
 ```
 
