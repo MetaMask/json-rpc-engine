@@ -39,15 +39,15 @@ interface JsonRpcValidatorOptions {
 
 /**
  * Gets a function for validating JSON-RPC request / response `id` values.
- * 
+ *
  * By manipulating the options of this factory, you can control the behavior
  * of the resulting validator for some edge cases. This is useful because e.g.
  * `null` should sometimes but not always be permitted.
- * 
+ *
  * Note that the empty string (`''`) is always permitted by the JSON-RPC
  * specification, but that kind of sucks and you may want to forbid it in some
  * instances anyway.
- * 
+ *
  * For more details, see the
  * [JSON-RPC Specification](https://www.jsonrpc.org/specification).
  *
