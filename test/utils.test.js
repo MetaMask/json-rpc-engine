@@ -11,7 +11,7 @@ const {
 describe('isJsonRpcSuccess', function () {
   it('correctly identifies JSON-RPC response objects', function () {
     assert.equal(isJsonRpcSuccess({ result: 'success' }), true);
-    assert.equal(isJsonRpcSuccess({ result: undefined }), true);
+    assert.equal(isJsonRpcSuccess({ result: null }), true);
     assert.equal(isJsonRpcSuccess({ error: new Error('foo') }), false);
     assert.equal(isJsonRpcSuccess({}), false);
   });
@@ -20,7 +20,7 @@ describe('isJsonRpcSuccess', function () {
 describe('isJsonRpcFailure', function () {
   it('correctly identifies JSON-RPC response objects', function () {
     assert.equal(isJsonRpcFailure({ error: 'failure' }), true);
-    assert.equal(isJsonRpcFailure({ error: undefined }), true);
+    assert.equal(isJsonRpcFailure({ error: null }), true);
     assert.equal(isJsonRpcFailure({ result: 'success' }), false);
     assert.equal(isJsonRpcFailure({}), false);
   });
