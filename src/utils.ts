@@ -32,10 +32,16 @@ export function isJsonRpcFailure(
 }
 
 interface JsonRpcValidatorOptions {
-  permitEmptyString: boolean;
-  permitFractions: boolean;
-  permitNull: boolean;
+  permitEmptyString?: boolean;
+  permitFractions?: boolean;
+  permitNull?: boolean;
 }
+
+const DEFAULT_VALIDATOR_OPTIONS: JsonRpcValidatorOptions = {
+  permitEmptyString: true,
+  permitFractions: false,
+  permitNull: true,
+};
 
 /**
  * Gets a function for validating JSON-RPC request / response `id` values.
@@ -60,14 +66,11 @@ interface JsonRpcValidatorOptions {
  * Default: `true`
  * @returns The JSON-RPC ID validator function.
  */
-export function getJsonRpcIdValidator(
-  options: JsonRpcValidatorOptions = {
-    permitEmptyString: true,
-    permitFractions: false,
-    permitNull: true,
-  },
-) {
-  const { permitEmptyString, permitFractions, permitNull } = options;
+export function getJsonRpcIdValidator(options?: JsonRpcValidatorOptions) {
+  const { permitEmptyString, permitFractions, permitNull } = {
+    ...DEFAULT_VALIDATOR_OPTIONS,
+    ...options,
+  };
 
   /**
    * @param id - The JSON-RPC ID value to check.

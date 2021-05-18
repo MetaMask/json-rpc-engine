@@ -71,8 +71,6 @@ describe('getJsonRpcIdValidator', function () {
     validateAll(
       getJsonRpcIdValidator({
         permitEmptyString: false,
-        permitFractions: false,
-        permitNull: true,
       }),
       inputs,
     );
@@ -84,9 +82,7 @@ describe('getJsonRpcIdValidator', function () {
 
     validateAll(
       getJsonRpcIdValidator({
-        permitEmptyString: true,
         permitFractions: true,
-        permitNull: true,
       }),
       inputs,
     );
@@ -98,8 +94,6 @@ describe('getJsonRpcIdValidator', function () {
 
     validateAll(
       getJsonRpcIdValidator({
-        permitEmptyString: true,
-        permitFractions: false,
         permitNull: false,
       }),
       inputs,
