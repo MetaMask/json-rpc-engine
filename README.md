@@ -57,7 +57,7 @@ By returning a _return handler function_, middleware can interact with the respo
 
 ```js
 engine.push((req, res, end) => {
-  return () => {
+  return async () => {
     await insertIntoCache(res);
   }
 })
