@@ -57,7 +57,7 @@ By passing a _return handler_ to the `next` function, you can get a peek at the 
 
 ```js
 engine.push((req, res, next, end) => {
-  next(() => {
+  next(async () => {
     await insertIntoCache(res)
   })
 })
