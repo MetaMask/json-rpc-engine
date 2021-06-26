@@ -43,6 +43,8 @@ engine.push(function (req, res, end) {
 });
 ```
 
+`end()` **must** be called once during middleware processing, or an internal error will be returned.
+
 Middleware functions can be `async`:
 
 ```js
@@ -70,6 +72,7 @@ Middleware functions **must** return a falsy value or a function.
 If anything else is returned, the request will end with an error.
 
 If a middleware calls `end()`, its return value will be ignored.
+The `end()` callback **must not** be passed a value.
 
 Engines can be nested by converting them to middleware using `JsonRpcEngine.asMiddleware()`:
 
@@ -81,34 +84,14 @@ engine.push(subengine.asMiddleware());
 
 ### Error Handling
 
-Errors should be handled by throwing inside middleware functions.
+Errors must be handled by throwing them inside middleware functions.
+A thrown error will immediately end middleware processing,
+and return a response object with an `error` but no `result`.
 
-For backwards compatibility, you can also pass an error to the `end` callback,
-or set the error on the response object, and then return or call `end`.
+Errors assigned directly to `response.error` will be overwritten.
+Non-`Error` values thrown inside middleware will be added under the `data` property of a new `Error`,
+which will be used as the response `error`.
 
-Errors always take precedent over results.
-If an error is detected, the response's `result` property will be deleted.
-
-All of the following examples are equivalent.
-It does not matter of the middleware function is synchronous or asynchronous.
-
-```js
-// Throwing is preferred.
-engine.push(function (req, res, end) {
-  throw new Error();
-});
-
-// For backwards compatibility, you can also do this:
-engine.push(function (req, res, end) {
-  end(new Error());
-});
-
-engine.push(function (req, res, end) {
-  res.error = new Error();
-  end();
-});
-
-engine.push(function (req, res, end) {
-  res.error = new Error();
-});
-```
+The `error` property of a response object returned by this package will always
+be a valid [JSON-RPC error](https://www.jsonrpc.org/specification#error_object), if present.
+These error values are plain objects, without `stack` properties.
