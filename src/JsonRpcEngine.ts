@@ -99,9 +99,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
   }
 
   /**
-   * Reset all middleware functions from the engine's middleware stack.
+   * Cleanup all middleware functions from the engine's middleware stack.
    */
-  reset(): void {
+  cleanup(): void {
     this._middleware.forEach((middleware: any) => {
       if (middleware.destroy && typeof middleware.destroy === 'function') {
         middleware.destroy();
