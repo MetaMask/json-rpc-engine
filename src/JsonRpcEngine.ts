@@ -107,6 +107,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
         middleware.destroy();
       }
     });
+    this._middleware = [];
   }
 
   /**

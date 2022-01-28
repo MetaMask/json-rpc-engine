@@ -505,4 +505,19 @@ describe('JsonRpcEngine', function () {
       assert.equal(err.message, 'foo', 'error has expected message');
     }
   });
+
+  it('cleanup middleware test', function (done) {
+    const engine = new JsonRpcEngine();
+    engine.push(function (_req, res, next, _end) {
+      res.result = 42;
+      next();
+    });
+    engine.push({
+      destroy: () => {
+        assert.ok('destroyed');
+        done();
+      },
+    });
+    engine.cleanup();
+  });
 });
