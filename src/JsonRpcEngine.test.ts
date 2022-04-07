@@ -30,13 +30,13 @@ describe('JsonRpcEngine', () => {
 
   it('handle: returns error for invalid request method', async () => {
     const engine = new JsonRpcEngine();
-    let response: any = await engine.handle({ method: null } as any);
+    let response: any = await engine.handle({ id: 1, method: null } as any);
     expect(response.error.code).toStrictEqual(-32600);
     expect(response.result).toBeUndefined();
 
+    // No response if duck-typed as a notification
     response = await engine.handle({ method: true } as any);
-    expect(response.error.code).toStrictEqual(-32600);
-    expect(response.result).toBeUndefined();
+    expect(response).toBeUndefined();
   });
 
   it('handle: basic middleware test 1', async () => {
