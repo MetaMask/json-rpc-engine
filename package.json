@@ -2,26 +2,38 @@
   "name": "json-rpc-engine",
   "version": "6.1.0",
   "description": "A tool for processing JSON-RPC messages.",
+  "homepage": "https://github.com/MetaMask/json-rpc-engine#readme",
+  "bugs": {
+    "url": "https://github.com/MetaMask/json-rpc-engine/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MetaMask/json-rpc-engine.git"
+  },
   "license": "ISC",
   "author": "kumavis",
+  "contributors": [
+    "kumavis <aaron@kumavis.me>",
+    "Erik Marks <rekmarks@protonmail.com>"
+  ],
   "main": "dist/index.js",
-  "engines": {
-    "node": ">=12.0.0"
+  "directories": {
+    "test": "test"
   },
   "files": [
     "dist"
   ],
   "scripts": {
+    "build": "tsc --project .",
+    "build:clean": "rimraf dist && yarn build",
+    "lint": "yarn lint:eslint && yarn lint:misc --check",
+    "lint:eslint": "eslint . --cache --ext js,ts",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
+    "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' '**/*.yml' --ignore-path .gitignore --no-error-on-unmatched-pattern",
+    "prepublishOnly": "yarn build:clean && yarn lint && yarn test:coverage",
     "setup": "yarn install && yarn allow-scripts",
     "test": "mocha ./test",
-    "test:coverage": "nyc --check-coverage yarn test",
-    "prepublishOnly": "yarn build:clean && yarn lint && yarn test:coverage",
-    "lint:eslint": "eslint . --cache --ext js,ts",
-    "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' '**/*.yml' --ignore-path .gitignore --no-error-on-unmatched-pattern",
-    "lint": "yarn lint:eslint && yarn lint:misc --check",
-    "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
-    "build:clean": "rimraf dist && yarn build",
-    "build": "tsc --project ."
+    "test:coverage": "nyc --check-coverage yarn test"
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",
@@ -40,8 +52,8 @@
     "eslint": "^7.23.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-mocha": "^8.1.0",
     "eslint-plugin-jsdoc": "^36.1.0",
+    "eslint-plugin-mocha": "^8.1.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.3.1",
     "mocha": "^7.1.1",
@@ -52,21 +64,9 @@
     "sinon": "^9.0.2",
     "typescript": "^4.2.4"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MetaMask/json-rpc-engine.git"
+  "engines": {
+    "node": ">=12.0.0"
   },
-  "bugs": {
-    "url": "https://github.com/MetaMask/json-rpc-engine/issues"
-  },
-  "homepage": "https://github.com/MetaMask/json-rpc-engine#readme",
-  "directories": {
-    "test": "test"
-  },
-  "contributors": [
-    "kumavis <aaron@kumavis.me>",
-    "Erik Marks <rekmarks@protonmail.com>"
-  ],
   "lavamoat": {
     "allowScripts": {
       "@lavamoat/preinstall-always-fail": false

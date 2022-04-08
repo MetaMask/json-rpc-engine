@@ -3,10 +3,6 @@ module.exports = {
 
   extends: ['@metamask/eslint-config'],
 
-  rules: {
-    'prefer-object-spread': 'off',
-  },
-
   overrides: [
     {
       files: ['*.ts'],
@@ -24,6 +20,9 @@ module.exports = {
     {
       files: ['test/*'],
       extends: ['@metamask/eslint-config-mocha'],
+      parserOptions: {
+        ecmaVersion: 2020,
+      },
     },
   ],
 
