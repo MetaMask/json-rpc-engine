@@ -19,8 +19,6 @@
     "dist"
   ],
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
     "build": "tsc --project .",
     "build:clean": "rimraf dist && yarn build",
     "lint": "yarn lint:eslint && yarn lint:misc --check",
@@ -28,7 +26,9 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' '**/*.yml' --ignore-path .gitignore --no-error-on-unmatched-pattern",
     "prepublishOnly": "yarn build:clean && yarn lint && yarn test:coverage",
-    "setup": "yarn install && yarn allow-scripts"
+    "setup": "yarn install && yarn allow-scripts",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",

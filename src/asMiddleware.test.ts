@@ -1,14 +1,17 @@
-/* eslint-env mocha */
-'use strict';
+import {
+  assertIsJsonRpcSuccess,
+  isJsonRpcSuccess,
+  JsonRpcEngine,
+  JsonRpcRequest,
+} from '.';
 
-const { strict: assert } = require('assert');
-const { JsonRpcEngine } = require('../dist');
+const jsonrpc = '2.0' as const;
 
 describe('asMiddleware', function () {
-  it('basic', function (done) {
+  it('basic', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
-    let originalReq;
+    let originalReq: JsonRpcRequest<unknown>;
 
     subengine.push(function (req, res, _next, end) {
       originalReq = req;
@@ -18,75 +21,79 @@ describe('asMiddleware', function () {
 
     engine.push(subengine.asMiddleware());
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(originalReq.id, res.id, 'id matches');
-      assert.equal(originalReq.jsonrpc, res.jsonrpc, 'jsonrpc version matches');
-      assert.equal(
-        res.result,
-        'saw subengine',
-        'response was handled by nested engine',
-      );
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        expect(originalReq.id).toStrictEqual(res.id);
+        expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
+        assertIsJsonRpcSuccess(res);
+        expect(res.result).toStrictEqual('saw subengine');
+        resolve();
+      });
     });
   });
 
-  it('decorate res', function (done) {
+  it('decorate res', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
-    let originalReq;
+    let originalReq: JsonRpcRequest<unknown>;
 
     subengine.push(function (req, res, _next, end) {
       originalReq = req;
-      res.xyz = true;
+      (res as any).xyz = true;
       res.result = true;
       end();
     });
 
     engine.push(subengine.asMiddleware());
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(originalReq.id, res.id, 'id matches');
-      assert.equal(originalReq.jsonrpc, res.jsonrpc, 'jsonrpc version matches');
-      assert.ok(res.xyz, 'res non-result prop was transfered');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        expect(originalReq.id).toStrictEqual(res.id);
+        expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
+        expect((res as any).xyz).toBe(true);
+        resolve();
+      });
     });
   });
 
-  it('decorate req', function (done) {
+  it('decorate req', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
-    let originalReq;
+    let originalReq: JsonRpcRequest<unknown>;
 
     subengine.push(function (req, res, _next, end) {
       originalReq = req;
-      req.xyz = true;
+      (req as any).xyz = true;
+      (res as any).xyz = true;
       res.result = true;
       end();
     });
 
     engine.push(subengine.asMiddleware());
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(originalReq.id, res.id, 'id matches');
-      assert.equal(originalReq.jsonrpc, res.jsonrpc, 'jsonrpc version matches');
-      assert.ok(originalReq.xyz, 'req prop was transfered');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        expect(originalReq.id).toStrictEqual(res.id);
+        expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
+        expect((originalReq as any).xyz).toBe(true);
+        resolve();
+      });
     });
   });
 
-  it('should not error even if end not called', function (done) {
+  it('should not error even if end not called', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
@@ -98,22 +105,24 @@ describe('asMiddleware', function () {
       end();
     });
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        resolve();
+      });
     });
   });
 
-  it('handles next handler correctly when nested', function (done) {
+  it('handles next handler correctly when nested', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
     subengine.push((_req, res, next, _end) => {
       next((cb) => {
-        res.copy = res.result;
+        (res as any).copy = res.result;
         cb();
       });
     });
@@ -123,23 +132,26 @@ describe('asMiddleware', function () {
       res.result = true;
       end();
     });
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(res.result, res.copy, 'copied result correctly');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        assertIsJsonRpcSuccess(res);
+        expect(res.result).toStrictEqual((res as any).copy);
+        resolve();
+      });
     });
   });
 
-  it('handles next handler correctly when flat', function (done) {
+  it('handles next handler correctly when flat', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
     subengine.push((_req, res, next, _end) => {
       next((cb) => {
-        res.copy = res.result;
+        (res as any).copy = res.result;
         cb();
       });
     });
@@ -150,17 +162,20 @@ describe('asMiddleware', function () {
     });
 
     engine.push(subengine.asMiddleware());
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(res.result, res.copy, 'copied result correctly');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        assertIsJsonRpcSuccess(res);
+        expect(res.result).toStrictEqual((res as any).copy);
+        resolve();
+      });
     });
   });
 
-  it('handles error thrown in middleware', function (done) {
+  it('handles error thrown in middleware', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
@@ -170,17 +185,19 @@ describe('asMiddleware', function () {
 
     engine.push(subengine.asMiddleware());
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ok(err, 'should have errored');
-      assert.equal(err.message, 'foo', 'should have expected error');
-      assert.ifError(res.result, 'should not have result');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeDefined();
+        expect((err as any).message).toStrictEqual('foo');
+        expect(isJsonRpcSuccess(res)).toBe(false);
+        resolve();
+      });
     });
   });
 
-  it('handles next handler error correctly when nested', function (done) {
+  it('handles next handler error correctly when nested', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
@@ -195,17 +212,19 @@ describe('asMiddleware', function () {
       res.result = true;
       end();
     });
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ok(err, 'should have errored');
-      assert.equal(err.message, 'foo', 'should have expected error');
-      assert.ifError(res.result, 'should not have result');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeDefined();
+        expect((err as any).message).toStrictEqual('foo');
+        expect(isJsonRpcSuccess(res)).toBe(false);
+        resolve();
+      });
     });
   });
 
-  it('handles next handler error correctly when flat', function (done) {
+  it('handles next handler error correctly when flat', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();
 
@@ -221,13 +240,15 @@ describe('asMiddleware', function () {
     });
 
     engine.push(subengine.asMiddleware());
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ok(err, 'should have errored');
-      assert.equal(err.message, 'foo', 'should have expected error');
-      assert.ifError(res.result, 'should not have result');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeDefined();
+        expect((err as any).message).toStrictEqual('foo');
+        expect(isJsonRpcSuccess(res)).toBe(false);
+        resolve();
+      });
     });
   });
 });

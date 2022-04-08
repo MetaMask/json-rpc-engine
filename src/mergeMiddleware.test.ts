@@ -1,13 +1,16 @@
-/* eslint-env mocha */
-'use strict';
+import {
+  assertIsJsonRpcSuccess,
+  JsonRpcEngine,
+  JsonRpcRequest,
+  mergeMiddleware,
+} from '.';
 
-const { strict: assert } = require('assert');
-const { JsonRpcEngine, mergeMiddleware } = require('../dist');
+const jsonrpc = '2.0' as const;
 
 describe('mergeMiddleware', function () {
-  it('basic', function (done) {
+  it('basic', async () => {
     const engine = new JsonRpcEngine();
-    let originalReq;
+    let originalReq: JsonRpcRequest<unknown>;
 
     engine.push(
       mergeMiddleware([
@@ -19,30 +22,28 @@ describe('mergeMiddleware', function () {
       ]),
     );
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(originalReq.id, res.id, 'id matches');
-      assert.equal(originalReq.jsonrpc, res.jsonrpc, 'jsonrpc version matches');
-      assert.equal(
-        res.result,
-        'saw merged middleware',
-        'response was handled by nested middleware',
-      );
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        expect(originalReq.id).toStrictEqual(res.id);
+        expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
+        expect('result' in res).toBe(true);
+        resolve();
+      });
     });
   });
 
-  it('handles next handler correctly for multiple merged', function (done) {
+  it('handles next handler correctly for multiple merged', async () => {
     const engine = new JsonRpcEngine();
 
     engine.push(
       mergeMiddleware([
         (_req, res, next, _end) => {
           next((cb) => {
-            res.copy = res.result;
+            (res as any).copy = res.result;
             cb();
           });
         },
@@ -53,71 +54,77 @@ describe('mergeMiddleware', function () {
       ]),
     );
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(res.result, res.copy, 'copied result correctly');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        assertIsJsonRpcSuccess(res);
+        expect(res.result).toStrictEqual((res as any).copy);
+        resolve();
+      });
     });
   });
 
-  it('decorate res', function (done) {
+  it('decorate res', async () => {
     const engine = new JsonRpcEngine();
-    let originalReq;
+    let originalReq: JsonRpcRequest<unknown>;
 
     engine.push(
       mergeMiddleware([
         function (req, res, _next, end) {
           originalReq = req;
-          res.xyz = true;
+          (res as any).xyz = true;
           res.result = true;
           end();
         },
       ]),
     );
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(originalReq.id, res.id, 'id matches');
-      assert.equal(originalReq.jsonrpc, res.jsonrpc, 'jsonrpc version matches');
-      assert.ok(res.xyz, 'res non-result prop was transfered');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        expect(originalReq.id).toStrictEqual(res.id);
+        expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
+        expect((res as any).xyz).toBe(true);
+        resolve();
+      });
     });
   });
 
-  it('decorate req', function (done) {
+  it('decorate req', async () => {
     const engine = new JsonRpcEngine();
-    let originalReq;
+    let originalReq: JsonRpcRequest<unknown>;
 
     engine.push(
       mergeMiddleware([
         function (req, res, _next, end) {
           originalReq = req;
-          req.xyz = true;
+          (req as any).xyz = true;
           res.result = true;
           end();
         },
       ]),
     );
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(originalReq.id, res.id, 'id matches');
-      assert.equal(originalReq.jsonrpc, res.jsonrpc, 'jsonrpc version matches');
-      assert.ok(originalReq.xyz, 'req prop was transfered');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        expect(originalReq.id).toStrictEqual(res.id);
+        expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
+        expect((originalReq as any).xyz).toBe(true);
+        resolve();
+      });
     });
   });
 
-  it('should not error even if end not called', function (done) {
+  it('should not error even if end not called', async () => {
     const engine = new JsonRpcEngine();
 
     engine.push(mergeMiddleware([(_req, _res, next, _end) => next()]));
@@ -126,23 +133,25 @@ describe('mergeMiddleware', function () {
       end();
     });
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        resolve();
+      });
     });
   });
 
-  it('handles next handler correctly across middleware', function (done) {
+  it('handles next handler correctly across middleware', async () => {
     const engine = new JsonRpcEngine();
 
     engine.push(
       mergeMiddleware([
         (_req, res, next, _end) => {
           next((cb) => {
-            res.copy = res.result;
+            (res as any).copy = res.result;
             cb();
           });
         },
@@ -153,13 +162,15 @@ describe('mergeMiddleware', function () {
       res.result = true;
       end();
     });
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc, method: 'hello' };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      assert.equal(res.result, res.copy, 'copied result correctly');
-      done();
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        assertIsJsonRpcSuccess(res);
+        expect(res.result).toStrictEqual((res as any).copy);
+        resolve();
+      });
     });
   });
 });

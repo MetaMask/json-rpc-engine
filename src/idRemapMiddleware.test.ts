@@ -1,14 +1,10 @@
-/* eslint-env mocha */
-'use strict';
-
-const { strict: assert } = require('assert');
-const { JsonRpcEngine, createIdRemapMiddleware } = require('../dist');
+import { JsonRpcEngine, createIdRemapMiddleware } from '.';
 
 describe('idRemapMiddleware', function () {
-  it('basic middleware test', function (done) {
+  it('basic middleware test', async () => {
     const engine = new JsonRpcEngine();
 
-    const observedIds = {
+    const observedIds: Record<string, Record<string, unknown>> = {
       before: {},
       after: {},
     };
@@ -27,35 +23,29 @@ describe('idRemapMiddleware', function () {
       end();
     });
 
-    const payload = { id: 1, jsonrpc: '2.0', method: 'hello' };
+    const payload = { id: 1, jsonrpc: '2.0' as const, method: 'hello' };
     const payloadCopy = { ...payload };
 
-    engine.handle(payload, function (err, res) {
-      assert.ifError(err, 'did not error');
-      assert.ok(res, 'has res');
-      // collected data
-      assert.ok(observedIds.before.req, 'captured ids');
-      assert.ok(observedIds.before.res, 'captured ids');
-      assert.ok(observedIds.after.req, 'captured ids');
-      assert.ok(observedIds.after.res, 'captured ids');
-      // data matches expectations
-      assert.equal(observedIds.before.req, observedIds.before.res, 'ids match');
-      assert.equal(observedIds.after.req, observedIds.after.res, 'ids match');
-      // correct behavior
-      assert.notEqual(
-        observedIds.before.req,
-        observedIds.after.req,
-        'ids are different',
-      );
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, function (err, res) {
+        expect(err).toBeNull();
+        expect(res).toBeDefined();
+        // collected data
+        expect(observedIds.before.req).toBeDefined();
+        expect(observedIds.before.res).toBeDefined();
+        expect(observedIds.after.req).toBeDefined();
+        expect(observedIds.after.res).toBeDefined();
+        // data matches expectations
+        expect(observedIds.before.req).toStrictEqual(observedIds.before.res);
+        expect(observedIds.after.req).toStrictEqual(observedIds.after.res);
+        // correct behavior
+        expect(observedIds.before.req).not.toStrictEqual(observedIds.after.req);
 
-      assert.equal(
-        observedIds.before.req,
-        res.id,
-        'result id matches original',
-      );
-      assert.equal(payload.id, res.id, 'result id matches original');
-      assert.equal(payloadCopy.id, res.id, 'result id matches original');
-      done();
+        expect(observedIds.before.req).toStrictEqual(res.id);
+        expect(payload.id).toStrictEqual(res.id);
+        expect(payloadCopy.id).toStrictEqual(res.id);
+        resolve();
+      });
     });
   });
 });

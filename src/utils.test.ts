@@ -1,28 +1,66 @@
-/* eslint-env mocha */
-'use strict';
-
-const { strict: assert } = require('assert');
-const {
+import {
   isJsonRpcFailure,
   isJsonRpcSuccess,
   getJsonRpcIdValidator,
-} = require('../dist');
+  assertIsJsonRpcSuccess,
+  assertIsJsonRpcFailure,
+} from '.';
 
 describe('isJsonRpcSuccess', function () {
   it('correctly identifies JSON-RPC response objects', function () {
-    assert.equal(isJsonRpcSuccess({ result: 'success' }), true);
-    assert.equal(isJsonRpcSuccess({ result: null }), true);
-    assert.equal(isJsonRpcSuccess({ error: new Error('foo') }), false);
-    assert.equal(isJsonRpcSuccess({}), false);
+    (
+      [
+        [{ result: 'success' }, true],
+        [{ result: null }, true],
+        [{ error: new Error('foo') }, false],
+        [{}, false],
+      ] as [any, boolean][]
+    ).forEach(([input, expectedResult]) => {
+      expect(isJsonRpcSuccess(input)).toBe(expectedResult);
+    });
   });
 });
 
 describe('isJsonRpcFailure', function () {
   it('correctly identifies JSON-RPC response objects', function () {
-    assert.equal(isJsonRpcFailure({ error: 'failure' }), true);
-    assert.equal(isJsonRpcFailure({ error: null }), true);
-    assert.equal(isJsonRpcFailure({ result: 'success' }), false);
-    assert.equal(isJsonRpcFailure({}), false);
+    (
+      [
+        [{ error: 'failure' }, true],
+        [{ error: null }, true],
+        [{ result: 'success' }, false],
+        [{}, false],
+      ] as [any, boolean][]
+    ).forEach(([input, expectedResult]) => {
+      expect(isJsonRpcFailure(input)).toBe(expectedResult);
+    });
+  });
+});
+
+describe('assertIsJsonRpcSuccess', function () {
+  it('correctly identifies JSON-RPC response objects', function () {
+    ([{ result: 'success' }, { result: null }] as any[]).forEach((input) => {
+      expect(() => assertIsJsonRpcSuccess(input)).not.toThrow();
+    });
+
+    ([{ error: new Error('foo') }, {}] as any[]).forEach((input) => {
+      expect(() => assertIsJsonRpcSuccess(input)).toThrow(
+        'Not a successful JSON-RPC response.',
+      );
+    });
+  });
+});
+
+describe('assertIsJsonRpcFailure', function () {
+  it('correctly identifies JSON-RPC response objects', function () {
+    ([{ error: 'failure' }, { error: null }] as any[]).forEach((input) => {
+      expect(() => assertIsJsonRpcFailure(input)).not.toThrow();
+    });
+
+    ([{ result: 'success' }, {}] as any[]).forEach((input) => {
+      expect(() => assertIsJsonRpcFailure(input)).toThrow(
+        'Not a failed JSON-RPC response.',
+      );
+    });
   });
 });
 
@@ -44,13 +82,12 @@ describe('getJsonRpcIdValidator', function () {
     };
   };
 
-  const validateAll = (validate, inputs) => {
+  const validateAll = (
+    validate: ReturnType<typeof getJsonRpcIdValidator>,
+    inputs: ReturnType<typeof getInputs>,
+  ) => {
     for (const input of Object.values(inputs)) {
-      assert.equal(
-        validate(input.value),
-        input.expected,
-        `should output "${input.expected}" for "${input.value}"`,
-      );
+      expect(validate(input.value)).toStrictEqual(input.expected);
     }
   };
 
@@ -61,42 +98,48 @@ describe('getJsonRpcIdValidator', function () {
     // permitEmptyString: true,
     // permitFractions: false,
     // permitNull: true,
-    validateAll(getJsonRpcIdValidator(), inputs);
+    expect(() => validateAll(getJsonRpcIdValidator(), inputs)).not.toThrow();
   });
 
   it('performs as expected with "permitEmptyString: false"', function () {
     const inputs = getInputs();
     inputs.emptyString.expected = false;
 
-    validateAll(
-      getJsonRpcIdValidator({
-        permitEmptyString: false,
-      }),
-      inputs,
-    );
+    expect(() =>
+      validateAll(
+        getJsonRpcIdValidator({
+          permitEmptyString: false,
+        }),
+        inputs,
+      ),
+    ).not.toThrow();
   });
 
   it('performs as expected with "permitFractions: true"', function () {
     const inputs = getInputs();
     inputs.fraction.expected = true;
 
-    validateAll(
-      getJsonRpcIdValidator({
-        permitFractions: true,
-      }),
-      inputs,
-    );
+    expect(() =>
+      validateAll(
+        getJsonRpcIdValidator({
+          permitFractions: true,
+        }),
+        inputs,
+      ),
+    ).not.toThrow();
   });
 
   it('performs as expected with "permitNull: false"', function () {
     const inputs = getInputs();
     inputs.null.expected = false;
 
-    validateAll(
-      getJsonRpcIdValidator({
-        permitNull: false,
-      }),
-      inputs,
-    );
+    expect(() =>
+      validateAll(
+        getJsonRpcIdValidator({
+          permitNull: false,
+        }),
+        inputs,
+      ),
+    ).not.toThrow();
   });
 });
