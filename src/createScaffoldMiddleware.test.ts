@@ -1,4 +1,10 @@
-import { JsonRpcEngine, createScaffoldMiddleware, JsonRpcMiddleware } from '.';
+import {
+  JsonRpcEngine,
+  createScaffoldMiddleware,
+  JsonRpcMiddleware,
+  assertIsJsonRpcSuccess,
+  assertIsJsonRpcFailure,
+} from '.';
 
 describe('createScaffoldMiddleware', function () {
   it('basic middleware test', async () => {
@@ -32,10 +38,16 @@ describe('createScaffoldMiddleware', function () {
     const response3 = await engine.handle({ ...payload, method: 'method3' });
     const response4 = await engine.handle({ ...payload, method: 'unknown' });
 
-    expect((response1 as any).result).toStrictEqual('foo');
-    expect((response2 as any).result).toStrictEqual(42);
-    expect((response3 as any).error.message).toStrictEqual('method3');
+    assertIsJsonRpcSuccess(response1);
+    expect(response1.result).toStrictEqual('foo');
 
-    expect((response4 as any).result).toStrictEqual('passthrough');
+    assertIsJsonRpcSuccess(response2);
+    expect(response2.result).toStrictEqual(42);
+
+    assertIsJsonRpcFailure(response3);
+    expect(response3.error.message).toStrictEqual('method3');
+
+    assertIsJsonRpcSuccess(response4);
+    expect(response4.result).toStrictEqual('passthrough');
   });
 });
