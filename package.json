@@ -11,11 +11,6 @@
     "url": "https://github.com/MetaMask/json-rpc-engine.git"
   },
   "license": "ISC",
-  "author": "kumavis",
-  "contributors": [
-    "kumavis <aaron@kumavis.me>",
-    "Erik Marks <rekmarks@protonmail.com>"
-  ],
   "main": "dist/index.js",
   "directories": {
     "test": "test"
