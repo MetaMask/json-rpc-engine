@@ -35,7 +35,7 @@ const config: Config.InitialOptions = {
   // ],
 
   // Indicates which provider should be used to instrument code for coverage
-  coverageProvider: 'v8',
+  coverageProvider: 'babel',
 
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: ['text', 'html'],
