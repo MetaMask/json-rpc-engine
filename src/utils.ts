@@ -37,7 +37,7 @@ export function isJsonRpcSuccess<T>(
 export function assertIsJsonRpcSuccess<T>(
   response: JsonRpcResponse<T>,
 ): asserts response is JsonRpcSuccess<T> {
-  if (!hasProperty(response, 'result')) {
+  if (!isJsonRpcSuccess(response)) {
     throw new Error('Not a successful JSON-RPC response.');
   }
 }
@@ -69,7 +69,7 @@ export function isJsonRpcFailure(
 export function assertIsJsonRpcFailure(
   response: JsonRpcResponse<unknown>,
 ): asserts response is JsonRpcFailure {
-  if (!hasProperty(response, 'error')) {
+  if (!isJsonRpcFailure(response)) {
     throw new Error('Not a failed JSON-RPC response.');
   }
 }
