@@ -1,6 +1,6 @@
 import { JsonRpcEngine, createIdRemapMiddleware } from '.';
 
-describe('idRemapMiddleware', function () {
+describe('idRemapMiddleware', () => {
   it('basic middleware test', async () => {
     const engine = new JsonRpcEngine();
 

@@ -7,7 +7,7 @@ import {
 
 const jsonrpc = '2.0' as const;
 
-describe('mergeMiddleware', function () {
+describe('mergeMiddleware', () => {
   it('basic', async () => {
     const engine = new JsonRpcEngine();
     let originalReq: JsonRpcRequest<unknown>;

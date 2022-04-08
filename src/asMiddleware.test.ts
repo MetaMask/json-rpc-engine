@@ -7,7 +7,7 @@ import {
 
 const jsonrpc = '2.0' as const;
 
-describe('asMiddleware', function () {
+describe('asMiddleware', () => {
   it('basic', async () => {
     const engine = new JsonRpcEngine();
     const subengine = new JsonRpcEngine();

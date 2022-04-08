@@ -6,8 +6,8 @@ import {
   assertIsJsonRpcFailure,
 } from '.';
 
-describe('isJsonRpcSuccess', function () {
-  it('correctly identifies JSON-RPC response objects', function () {
+describe('isJsonRpcSuccess', () => {
+  it('correctly identifies JSON-RPC response objects', () => {
     (
       [
         [{ result: 'success' }, true],
@@ -21,8 +21,8 @@ describe('isJsonRpcSuccess', function () {
   });
 });
 
-describe('isJsonRpcFailure', function () {
-  it('correctly identifies JSON-RPC response objects', function () {
+describe('isJsonRpcFailure', () => {
+  it('correctly identifies JSON-RPC response objects', () => {
     (
       [
         [{ error: 'failure' }, true],
@@ -36,8 +36,8 @@ describe('isJsonRpcFailure', function () {
   });
 });
 
-describe('assertIsJsonRpcSuccess', function () {
-  it('correctly identifies JSON-RPC response objects', function () {
+describe('assertIsJsonRpcSuccess', () => {
+  it('correctly identifies JSON-RPC response objects', () => {
     ([{ result: 'success' }, { result: null }] as any[]).forEach((input) => {
       expect(() => assertIsJsonRpcSuccess(input)).not.toThrow();
     });
@@ -50,8 +50,8 @@ describe('assertIsJsonRpcSuccess', function () {
   });
 });
 
-describe('assertIsJsonRpcFailure', function () {
-  it('correctly identifies JSON-RPC response objects', function () {
+describe('assertIsJsonRpcFailure', () => {
+  it('correctly identifies JSON-RPC response objects', () => {
     ([{ error: 'failure' }, { error: null }] as any[]).forEach((input) => {
       expect(() => assertIsJsonRpcFailure(input)).not.toThrow();
     });
@@ -64,7 +64,7 @@ describe('assertIsJsonRpcFailure', function () {
   });
 });
 
-describe('getJsonRpcIdValidator', function () {
+describe('getJsonRpcIdValidator', () => {
   const getInputs = () => {
     return {
       // invariant with respect to options
@@ -91,7 +91,7 @@ describe('getJsonRpcIdValidator', function () {
     }
   };
 
-  it('performs as expected with default options', function () {
+  it('performs as expected with default options', () => {
     const inputs = getInputs();
 
     // The default options are:
@@ -101,7 +101,7 @@ describe('getJsonRpcIdValidator', function () {
     expect(() => validateAll(getJsonRpcIdValidator(), inputs)).not.toThrow();
   });
 
-  it('performs as expected with "permitEmptyString: false"', function () {
+  it('performs as expected with "permitEmptyString: false"', () => {
     const inputs = getInputs();
     inputs.emptyString.expected = false;
 
@@ -115,7 +115,7 @@ describe('getJsonRpcIdValidator', function () {
     ).not.toThrow();
   });
 
-  it('performs as expected with "permitFractions: true"', function () {
+  it('performs as expected with "permitFractions: true"', () => {
     const inputs = getInputs();
     inputs.fraction.expected = true;
 
@@ -129,7 +129,7 @@ describe('getJsonRpcIdValidator', function () {
     ).not.toThrow();
   });
 
-  it('performs as expected with "permitNull: false"', function () {
+  it('performs as expected with "permitNull: false"', () => {
     const inputs = getInputs();
     inputs.null.expected = false;
 

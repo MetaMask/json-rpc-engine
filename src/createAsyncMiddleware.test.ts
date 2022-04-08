@@ -6,7 +6,7 @@ import {
 
 const jsonrpc = '2.0' as const;
 
-describe('createAsyncMiddleware', function () {
+describe('createAsyncMiddleware', () => {
   it('basic middleware test', async () => {
     const engine = new JsonRpcEngine();
 

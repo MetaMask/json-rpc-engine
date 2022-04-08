@@ -6,7 +6,7 @@ import {
   assertIsJsonRpcFailure,
 } from '.';
 
-describe('createScaffoldMiddleware', function () {
+describe('createScaffoldMiddleware', () => {
   it('basic middleware test', async () => {
     const engine = new JsonRpcEngine();
 

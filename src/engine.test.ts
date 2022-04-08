@@ -7,15 +7,15 @@ import {
 
 const jsonrpc = '2.0' as const;
 
-describe('JsonRpcEngine', function () {
-  it('handle: throws on truthy, non-function callback', function () {
+describe('JsonRpcEngine', () => {
+  it('handle: throws on truthy, non-function callback', () => {
     const engine: any = new JsonRpcEngine();
     expect(() => engine.handle({}, true)).toThrow(
       '"callback" must be a function if provided.',
     );
   });
 
-  it('handle: returns error for invalid request parameter', async function () {
+  it('handle: returns error for invalid request parameter', async () => {
     const engine = new JsonRpcEngine();
     let response: any = await engine.handle(null as any);
     expect(response.error.code).toStrictEqual(-32600);
@@ -26,7 +26,7 @@ describe('JsonRpcEngine', function () {
     expect(response.result).toBeUndefined();
   });
 
-  it('handle: returns error for invalid request method', async function () {
+  it('handle: returns error for invalid request method', async () => {
     const engine = new JsonRpcEngine();
     let response: any = await engine.handle({ method: null } as any);
     expect(response.error.code).toStrictEqual(-32600);
@@ -79,7 +79,7 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('handle (async): basic middleware test', async function () {
+  it('handle (async): basic middleware test', async () => {
     const engine = new JsonRpcEngine();
 
     engine.push(function (_req, res, _next, end) {
@@ -299,7 +299,7 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('handle: batch payloads (async signature)', async function () {
+  it('handle: batch payloads (async signature)', async () => {
     const engine = new JsonRpcEngine();
 
     engine.push(function (req, res, _next, end) {
@@ -329,7 +329,7 @@ describe('JsonRpcEngine', function () {
     expect(res[4].result).toStrictEqual(5);
   });
 
-  it('handle: batch payload with bad request object', async function () {
+  it('handle: batch payload with bad request object', async () => {
     const engine = new JsonRpcEngine();
 
     engine.push(function (req, res, _next, end) {
@@ -518,7 +518,7 @@ describe('JsonRpcEngine', function () {
     });
   });
 
-  it('handles batch request processing error (async)', async function () {
+  it('handles batch request processing error (async)', async () => {
     const engine = new JsonRpcEngine();
     jest
       .spyOn(engine as any, '_promiseHandle')
