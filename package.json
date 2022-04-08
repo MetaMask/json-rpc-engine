@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MetaMask/json-rpc-engine.git"
+    "url": "https://github.com/MetaMask/json-rpc-engine.git"
   },
   "license": "ISC",
   "author": "kumavis",
