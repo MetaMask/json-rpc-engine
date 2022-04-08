@@ -27,7 +27,7 @@ export function isJsonRpcSuccess<T>(
 }
 
 /**
- * ATTN:** Assumes that only one of the `result` and `error` properties is
+ * ATTN: Assumes that only one of the `result` and `error` properties is
  * present on the `response`, as guaranteed by e.g. `JsonRpcEngine.handle`.
  *
  * Type assertion to narrow a JsonRpcResponse object to a success (or failure).
@@ -59,7 +59,7 @@ export function isJsonRpcFailure(
 }
 
 /**
- * ATTN:** Assumes that only one of the `result` and `error` properties is
+ * ATTN: Assumes that only one of the `result` and `error` properties is
  * present on the `response`, as guaranteed by e.g. `JsonRpcEngine.handle`.
  *
  * Type assertion to narrow a JsonRpcResponse object to a failure (or success).
