@@ -221,10 +221,10 @@
     semver "^7.3.5"
     yargs "^17.0.1"
 
-"@metamask/eslint-config-mocha@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@metamask/eslint-config-mocha/-/eslint-config-mocha-6.0.0.tgz#407fc07d4bdfbc79b64989fa9a56a5a671aa4721"
-  integrity sha512-Hf1JYLWsW9JQWWwlLHltK1l0wqLOjCF0z5V2Dwt0oGUjFdAoVm8fOa2TisrgHNHYuAtyd+ZaIEm/xQce1L2ovg==
+"@metamask/eslint-config-mocha@^9.0.0":
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/@metamask/eslint-config-mocha/-/eslint-config-mocha-9.0.0.tgz#2fb77e9186b79a169d5b2736bd9005bb397e46e4"
+  integrity sha512-aOAezCBN+HCwH7JWemI1rAXCz/2yyF52YWTvJVP0kCmnfBdm7BpfhOP0d3d5+SpCu9UhOjREqaa2rB2TCiHsJQ==
 
 "@metamask/eslint-config-nodejs@^9.0.0":
   version "9.0.0"
