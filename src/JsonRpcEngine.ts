@@ -133,18 +133,16 @@ export class JsonRpcEngine extends SafeEventEmitter {
   /**
    * Handle a JSON-RPC request, and return a response.
    *
-   * @param request - The request to handle.
-   * @returns A promise that resolves with the response, or rejects with an
-   * error.
+   * @param request - The JSON-RPC request to handle.
+   * @returns The JSON-RPC response.
    */
   handle<T, U>(request: JsonRpcRequest<T>): Promise<JsonRpcResponse<U>>;
 
   /**
    * Handle an array of JSON-RPC requests, and return an array of responses.
    *
-   * @param request - The requests to handle.
-   * @returns A promise that resolves with the array of responses, or rejects
-   * with an error.
+   * @param request - The JSON-RPC requests to handle.
+   * @returns An array of JSON-RPC responses.
    */
   handle<T, U>(requests: JsonRpcRequest<T>[]): Promise<JsonRpcResponse<U>[]>;
 
@@ -250,8 +248,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
   /**
    * A promise-wrapped _handle.
    *
-   * @param req - The request object.
-   * @returns A Promise resolving to the response object.
+   * @param req - The JSON-RPC request.
+   * @returns The JSON-RPC response.
    */
   private _promiseHandle(
     req: JsonRpcRequest<unknown>,
