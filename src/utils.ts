@@ -8,7 +8,7 @@ import type {
 export const hasProperty = (
   object: Object, // eslint-disable-line @typescript-eslint/ban-types
   name: string | number | symbol,
-): boolean => Reflect.hasOwnProperty.call(object, name);
+): boolean => Object.hasOwnProperty.call(object, name);
 
 /**
  * ATTN: Assumes that only one of the `result` and `error` properties is
