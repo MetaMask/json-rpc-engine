@@ -1,3 +1,4 @@
+import { ethErrors } from 'eth-rpc-errors';
 import {
   JsonRpcEngine,
   createScaffoldMiddleware,
@@ -20,7 +21,7 @@ describe('createScaffoldMiddleware', () => {
         end();
       },
       method3: (_req, res, _next, end) => {
-        res.error = new Error('method3');
+        res.error = ethErrors.rpc.internal({ message: 'method3' });
         end();
       },
     };

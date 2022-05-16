@@ -1,40 +1,8 @@
 import {
-  isJsonRpcFailure,
-  isJsonRpcSuccess,
   getJsonRpcIdValidator,
   assertIsJsonRpcSuccess,
   assertIsJsonRpcFailure,
 } from '.';
-
-describe('isJsonRpcSuccess', () => {
-  it('correctly identifies JSON-RPC response objects', () => {
-    (
-      [
-        [{ result: 'success' }, true],
-        [{ result: null }, true],
-        [{ error: new Error('foo') }, false],
-        [{}, false],
-      ] as [any, boolean][]
-    ).forEach(([input, expectedResult]) => {
-      expect(isJsonRpcSuccess(input)).toBe(expectedResult);
-    });
-  });
-});
-
-describe('isJsonRpcFailure', () => {
-  it('correctly identifies JSON-RPC response objects', () => {
-    (
-      [
-        [{ error: 'failure' }, true],
-        [{ error: null }, true],
-        [{ result: 'success' }, false],
-        [{}, false],
-      ] as [any, boolean][]
-    ).forEach(([input, expectedResult]) => {
-      expect(isJsonRpcFailure(input)).toBe(expectedResult);
-    });
-  });
-});
 
 describe('assertIsJsonRpcSuccess', () => {
   it('correctly identifies JSON-RPC response objects', () => {

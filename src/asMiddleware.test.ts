@@ -1,9 +1,5 @@
-import {
-  assertIsJsonRpcSuccess,
-  isJsonRpcSuccess,
-  JsonRpcEngine,
-  JsonRpcRequest,
-} from '.';
+import { isJsonRpcSuccess, JsonRpcRequest } from '@metamask/utils';
+import { assertIsJsonRpcSuccess, JsonRpcEngine } from '.';
 
 const jsonrpc = '2.0' as const;
 
