@@ -1,5 +1,10 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
-import { JsonRpcError, JsonRpcRequest, JsonRpcResponse } from '@metamask/utils';
+import {
+  hasProperty,
+  JsonRpcError,
+  JsonRpcRequest,
+  JsonRpcResponse,
+} from '@metamask/utils';
 import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
 
 export type PendingJsonRpcResponse<Result> = Omit<
@@ -432,7 +437,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     res: PendingJsonRpcResponse<unknown>,
     isComplete: boolean,
   ): void {
-    if (!('result' in res) && !('error' in res)) {
+    if (!hasProperty(res, 'result') && !hasProperty(res, 'error')) {
       throw new EthereumRpcError(
         errorCodes.rpc.internal,
         `JsonRpcEngine: Response has no error or result for request:\n${jsonify(
