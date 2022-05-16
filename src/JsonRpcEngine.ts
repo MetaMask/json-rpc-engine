@@ -29,9 +29,9 @@ export type JsonRpcEngineEndCallback = (
   error?: JsonRpcEngineCallbackError,
 ) => void;
 
-export type JsonRpcMiddleware<T, U> = (
-  req: JsonRpcRequest<T>,
-  res: PendingJsonRpcResponse<U>,
+export type JsonRpcMiddleware<Params, Result> = (
+  req: JsonRpcRequest<Params>,
+  res: PendingJsonRpcResponse<Result>,
   next: JsonRpcEngineNextCallback,
   end: JsonRpcEngineEndCallback,
 ) => void;
@@ -53,7 +53,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    *
    * @param middleware - The middleware function to add.
    */
-  push<T, U>(middleware: JsonRpcMiddleware<T, U>): void {
+  push<Params, Result>(middleware: JsonRpcMiddleware<Params, Result>): void {
     this._middleware.push(middleware as JsonRpcMiddleware<unknown, unknown>);
   }
 
@@ -63,9 +63,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @param request - The request to handle.
    * @param callback - An error-first callback that will receive the response.
    */
-  handle<T, U>(
-    request: JsonRpcRequest<T>,
-    callback: (error: unknown, response: JsonRpcResponse<U>) => void,
+  handle<Params, Result>(
+    request: JsonRpcRequest<Params>,
+    callback: (error: unknown, response: JsonRpcResponse<Result>) => void,
   ): void;
 
   /**
@@ -75,9 +75,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @param callback - An error-first callback that will receive the array of
    * responses.
    */
-  handle<T, U>(
-    requests: JsonRpcRequest<T>[],
-    callback: (error: unknown, responses: JsonRpcResponse<U>[]) => void,
+  handle<Params, Result>(
+    requests: JsonRpcRequest<Params>[],
+    callback: (error: unknown, responses: JsonRpcResponse<Result>[]) => void,
   ): void;
 
   /**
@@ -86,7 +86,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @param request - The JSON-RPC request to handle.
    * @returns The JSON-RPC response.
    */
-  handle<T, U>(request: JsonRpcRequest<T>): Promise<JsonRpcResponse<U>>;
+  handle<Params, Result>(
+    request: JsonRpcRequest<Params>,
+  ): Promise<JsonRpcResponse<Result>>;
 
   /**
    * Handle an array of JSON-RPC requests, and return an array of responses.
@@ -94,7 +96,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @param request - The JSON-RPC requests to handle.
    * @returns An array of JSON-RPC responses.
    */
-  handle<T, U>(requests: JsonRpcRequest<T>[]): Promise<JsonRpcResponse<U>[]>;
+  handle<Params, Result>(
+    requests: JsonRpcRequest<Params>[],
+  ): Promise<JsonRpcResponse<Result>[]>;
 
   handle(req: unknown, callback?: any) {
     if (callback && typeof callback !== 'function') {
