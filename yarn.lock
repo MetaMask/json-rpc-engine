@@ -622,10 +622,10 @@
   resolved "https://registry.yarnpkg.com/@metamask/safe-event-emitter/-/safe-event-emitter-2.0.0.tgz#af577b477c683fad17c619a78208cede06f9605c"
   integrity sha512-/kSXhY692qiV1MXu6EeOZvg5nECLclxNXcKCxJ3cXQgYuRymRHpdx/t7JXfsK+JLjwA1e1c1/SBrlQYpusC29Q==
 
-"@metamask/utils@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@metamask/utils/-/utils-1.0.0.tgz#ff923dbefdf62e5c27e5ca9393bbb5844d679bf3"
-  integrity sha512-XFHydAXmA5GNr0eze5w2htMMRWScPzO1hMzbdPXRC/9oAX1hQeQaMdROU+HmvKCheQh0HJ0uPspOx73P0AXBVg==
+"@metamask/utils@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@metamask/utils/-/utils-2.0.0.tgz#fe7e970416a256751c429f4a5e96aec6c4366ba7"
+  integrity sha512-AZ63AhRxAZXll+/SEiyEXgrxuAL4yOj0ny4V36VgPmTDvt+7GrmVJWrQF3o5PZZWV6ooaHZ9291RZHRcKZm0HA==
   dependencies:
     fast-deep-equal "^3.1.3"
 

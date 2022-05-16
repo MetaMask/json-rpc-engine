@@ -1,11 +1,9 @@
-import { ethErrors } from 'eth-rpc-errors';
 import {
-  JsonRpcEngine,
-  createScaffoldMiddleware,
-  JsonRpcMiddleware,
   assertIsJsonRpcSuccess,
   assertIsJsonRpcFailure,
-} from '.';
+} from '@metamask/utils';
+import { ethErrors } from 'eth-rpc-errors';
+import { JsonRpcEngine, createScaffoldMiddleware, JsonRpcMiddleware } from '.';
 
 describe('createScaffoldMiddleware', () => {
   it('basic middleware test', async () => {

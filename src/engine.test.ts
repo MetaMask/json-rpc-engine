@@ -1,10 +1,11 @@
-import { isJsonRpcFailure, isJsonRpcSuccess } from '@metamask/utils';
-import { ethErrors } from 'eth-rpc-errors';
 import {
-  JsonRpcEngine,
   assertIsJsonRpcSuccess,
   assertIsJsonRpcFailure,
-} from '.';
+  isJsonRpcFailure,
+  isJsonRpcSuccess,
+} from '@metamask/utils';
+import { ethErrors } from 'eth-rpc-errors';
+import { JsonRpcEngine } from '.';
 
 const jsonrpc = '2.0' as const;
 
