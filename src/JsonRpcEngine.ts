@@ -43,6 +43,10 @@ export type JsonRpcNotificationHandler<Params> = (
   notification: JsonRpcNotification<Params>,
 ) => void | Promise<void>;
 
+interface JsonRpcEngineArgs {
+  notificationHandler?: JsonRpcNotificationHandler<unknown>;
+}
+
 /**
  * A JSON-RPC request and response processor.
  * Give it a stack of middleware, pass it requests, and get back responses.
@@ -52,7 +56,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
   private readonly _notificationHandler?: JsonRpcNotificationHandler<unknown>;
 
-  constructor(notificationHandler?: JsonRpcNotificationHandler<unknown>) {
+  constructor({ notificationHandler }: JsonRpcEngineArgs = {}) {
     super();
     this._middleware = [];
     this._notificationHandler = notificationHandler;
