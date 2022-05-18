@@ -60,13 +60,20 @@ describe('JsonRpcEngine', () => {
     expect(middleware).not.toHaveBeenCalled();
   });
 
-  it('handle: ignores handlers when no notification is specified', async () => {
-    const middleware = jest.fn();
+  it('handle: treats notifications as requests when no notification handler is specified', async () => {
+    const middleware = jest.fn().mockImplementation((_req, res, _next, end) => {
+      res.result = 'bar';
+      end();
+    });
     const engine = new JsonRpcEngine();
     engine.push(middleware);
 
-    expect(await engine.handle({ jsonrpc, method: 'foo' })).toBeUndefined();
-    expect(middleware).not.toHaveBeenCalled();
+    expect(await engine.handle({ jsonrpc, method: 'foo' })).toStrictEqual({
+      jsonrpc,
+      result: 'bar',
+      id: undefined,
+    });
+    expect(middleware).toHaveBeenCalledTimes(1);
   });
 
   it('handle: forwards notifications to handlers', async () => {

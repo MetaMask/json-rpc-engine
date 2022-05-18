@@ -56,6 +56,17 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
   private readonly _notificationHandler?: JsonRpcNotificationHandler<unknown>;
 
+  /**
+   * Constructs a {@link JsonRpcEngine} instance.
+   *
+   * @param options - Options bag.
+   * @param options.notificationHandler - A function for handling JSON-RPC
+   * notifications. A JSON-RPC notification is defined as a JSON-RPC request
+   * without an `id` property. If this option is not provided, notifications
+   * will be treated the same as requests. If this option _is_ provided,
+   * notifications will be passed to the handler function without touching
+   * the engine's middleware stack.
+   */
   constructor({ notificationHandler }: JsonRpcEngineArgs = {}) {
     super();
     this._middleware = [];
@@ -290,29 +301,31 @@ export class JsonRpcEngine extends SafeEventEmitter {
         { request: callerReq },
       );
 
-      if (isJsonRpcRequest(callerReq)) {
-        return callback(error, {
-          id: callerReq.id ?? null,
-          jsonrpc: '2.0',
-          error,
-        });
+      if (this._notificationHandler && !isJsonRpcRequest(callerReq)) {
+        // Do not reply to notifications, even malformed ones.
+        return callback(null);
       }
-      // Do not reply to notifications, even malformed ones.
-      return callback(null);
+
+      return callback(error, {
+        id: (callerReq as JsonRpcRequest<unknown>).id ?? null,
+        jsonrpc: '2.0',
+        error,
+      });
     }
 
     // Handle notifications.
     // We can't use isJsonRpcNotification here because that narrows callerReq to
     // "never" after the if clause for unknown reasons.
-    if (!isJsonRpcRequest(callerReq)) {
-      await this._notificationHandler?.(callerReq);
+    if (this._notificationHandler && !isJsonRpcRequest(callerReq)) {
+      await this._notificationHandler(callerReq);
       return callback(null);
     }
 
     let error: JsonRpcEngineCallbackError = null;
 
     // Handle requests.
-    const req: JsonRpcRequest<unknown> = { ...callerReq };
+    // Typecast: Permit missing id's for backwards compatibility.
+    const req = { ...(callerReq as JsonRpcRequest<unknown>) };
     const res: PendingJsonRpcResponse<unknown> = {
       id: req.id,
       jsonrpc: req.jsonrpc,
