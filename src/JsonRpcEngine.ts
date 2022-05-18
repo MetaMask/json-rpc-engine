@@ -44,6 +44,13 @@ export type JsonRpcNotificationHandler<Params> = (
 ) => void | Promise<void>;
 
 interface JsonRpcEngineArgs {
+  /**
+   * A function for handling JSON-RPC notifications. A JSON-RPC notification is
+   * defined as a JSON-RPC request without an `id` property. If this option is
+   * _not_ provided, notifications will be treated the same as requests. If this
+   * option _is_ provided, notifications will be passed to the handler
+   * function without touching the engine's middleware stack.
+   */
   notificationHandler?: JsonRpcNotificationHandler<unknown>;
 }
 
@@ -62,7 +69,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @param options - Options bag.
    * @param options.notificationHandler - A function for handling JSON-RPC
    * notifications. A JSON-RPC notification is defined as a JSON-RPC request
-   * without an `id` property. If this option is not provided, notifications
+   * without an `id` property. If this option is _not_ provided, notifications
    * will be treated the same as requests. If this option _is_ provided,
    * notifications will be passed to the handler function without touching
    * the engine's middleware stack.
