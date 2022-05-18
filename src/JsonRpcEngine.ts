@@ -39,11 +39,19 @@ export interface JsonRpcMiddleware<Params, Result> {
   destroy?: () => void | Promise<void>;
 }
 
+const DESTROYED_ERROR_MESSAGE =
+  'This engine is destroyed and can no longer be used.';
+
 /**
  * A JSON-RPC request and response processor.
  * Give it a stack of middleware, pass it requests, and get back responses.
  */
 export class JsonRpcEngine extends SafeEventEmitter {
+  /**
+   * Indicating whether this engine is destroyed or not.
+   */
+  private _isDestroyed = false;
+
   private _middleware: JsonRpcMiddleware<unknown, unknown>[];
 
   constructor() {
@@ -52,19 +60,20 @@ export class JsonRpcEngine extends SafeEventEmitter {
   }
 
   /**
-   * Add a middleware function to the engine's middleware stack.
-   *
-   * @param middleware - The middleware function to add.
+   * Throws an error if this engine is destroyed.
    */
-  push<Params, Result>(middleware: JsonRpcMiddleware<Params, Result>): void {
-    this._middleware.push(middleware as JsonRpcMiddleware<unknown, unknown>);
+  private _assertIsNotDestroyed() {
+    if (this._isDestroyed) {
+      throw new Error(DESTROYED_ERROR_MESSAGE);
+    }
   }
 
   /**
-   * Calls the `destroy()` function of any middleware with that property and clears
-   * the middleware array.
+   * Calls the `destroy()` function of any middleware with that property, clears
+   * the middleware array, and marks this engine as destroyed. A destroyed
+   * engine cannot be used.
    */
-  cleanup(): void {
+  destroy(): void {
     this._middleware.forEach(
       (middleware: JsonRpcMiddleware<unknown, unknown>) => {
         if (
@@ -78,6 +87,17 @@ export class JsonRpcEngine extends SafeEventEmitter {
       },
     );
     this._middleware = [];
+    this._isDestroyed = true;
+  }
+
+  /**
+   * Add a middleware function to the engine's middleware stack.
+   *
+   * @param middleware - The middleware function to add.
+   */
+  push<Params, Result>(middleware: JsonRpcMiddleware<Params, Result>): void {
+    this._assertIsNotDestroyed();
+    this._middleware.push(middleware as JsonRpcMiddleware<unknown, unknown>);
   }
 
   /**
@@ -124,6 +144,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
   ): Promise<JsonRpcResponse<Result>[]>;
 
   handle(req: unknown, callback?: any) {
+    this._assertIsNotDestroyed();
+
     if (callback && typeof callback !== 'function') {
       throw new Error('"callback" must be a function if provided.');
     }
@@ -148,6 +170,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @returns This engine as a middleware function.
    */
   asMiddleware(): JsonRpcMiddleware<unknown, unknown> {
+    this._assertIsNotDestroyed();
     return async (req, res, next, end) => {
       try {
         const [middlewareError, isComplete, returnHandlers] =

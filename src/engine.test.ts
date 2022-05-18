@@ -529,27 +529,41 @@ describe('JsonRpcEngine', () => {
     await expect(engine.handle([{}] as any)).rejects.toThrow('foo');
   });
 
-  it('cleanup middleware test', async () => {
-    const engine = new JsonRpcEngine();
+  describe('destroy', () => {
+    it('prevents the engine from being used', () => {
+      const destroyedError = new Error(
+        'This engine is destroyed and can no longer be used.',
+      );
+      const engine = new JsonRpcEngine();
+      engine.destroy();
 
-    engine.push((_req, res, next, _end) => {
-      res.result = 42;
-      next();
+      expect(() => engine.handle([])).toThrow(destroyedError);
+      expect(() => engine.asMiddleware()).toThrow(destroyedError);
+      expect(() => engine.push(() => undefined)).toThrow(destroyedError);
     });
 
-    const destroyMock = jest.fn();
-    const destroyableMiddleware: JsonRpcMiddleware<unknown, unknown> = (
-      _req,
-      _res,
-      _next,
-      end,
-    ) => {
-      end();
-    };
-    destroyableMiddleware.destroy = destroyMock;
-    engine.push(destroyableMiddleware);
+    it('calls the destroy method of middleware functions', async () => {
+      const engine = new JsonRpcEngine();
 
-    engine.cleanup();
-    expect(destroyMock).toHaveBeenCalledTimes(1);
+      engine.push((_req, res, next, _end) => {
+        res.result = 42;
+        next();
+      });
+
+      const destroyMock = jest.fn();
+      const destroyableMiddleware: JsonRpcMiddleware<unknown, unknown> = (
+        _req,
+        _res,
+        _next,
+        end,
+      ) => {
+        end();
+      };
+      destroyableMiddleware.destroy = destroyMock;
+      engine.push(destroyableMiddleware);
+
+      engine.destroy();
+      expect(destroyMock).toHaveBeenCalledTimes(1);
+    });
   });
 });
