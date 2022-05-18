@@ -5,7 +5,7 @@ import {
   isJsonRpcSuccess,
 } from '@metamask/utils';
 import { ethErrors } from 'eth-rpc-errors';
-import { JsonRpcEngine } from '.';
+import { JsonRpcEngine, JsonRpcMiddleware } from '.';
 
 const jsonrpc = '2.0' as const;
 
@@ -531,17 +531,25 @@ describe('JsonRpcEngine', () => {
 
   it('cleanup middleware test', async () => {
     const engine = new JsonRpcEngine();
+
     engine.push((_req, res, next, _end) => {
       res.result = 42;
       next();
     });
 
-    const mockDestroy = jest.fn();
-    engine.push({
-      destroy: mockDestroy,
-    } as any);
+    const destroyMock = jest.fn();
+    const destroyableMiddleware: JsonRpcMiddleware<unknown, unknown> = (
+      _req,
+      _res,
+      _next,
+      end,
+    ) => {
+      end();
+    };
+    destroyableMiddleware.destroy = destroyMock;
+    engine.push(destroyableMiddleware);
 
     engine.cleanup();
-    expect(mockDestroy).toHaveBeenCalledTimes(1);
+    expect(destroyMock).toHaveBeenCalledTimes(1);
   });
 });

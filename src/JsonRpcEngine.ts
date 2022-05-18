@@ -29,12 +29,15 @@ export type JsonRpcEngineEndCallback = (
   error?: JsonRpcEngineCallbackError,
 ) => void;
 
-export type JsonRpcMiddleware<Params, Result> = (
-  req: JsonRpcRequest<Params>,
-  res: PendingJsonRpcResponse<Result>,
-  next: JsonRpcEngineNextCallback,
-  end: JsonRpcEngineEndCallback,
-) => void;
+export interface JsonRpcMiddleware<Params, Result> {
+  (
+    req: JsonRpcRequest<Params>,
+    res: PendingJsonRpcResponse<Result>,
+    next: JsonRpcEngineNextCallback,
+    end: JsonRpcEngineEndCallback,
+  ): void;
+  destroy?: () => void | Promise<void>;
+}
 
 /**
  * A JSON-RPC request and response processor.
@@ -49,24 +52,32 @@ export class JsonRpcEngine extends SafeEventEmitter {
   }
 
   /**
-   * Cleanup all middleware functions from the engine's middleware stack.
-   */
-  cleanup(): void {
-    this._middleware.forEach((middleware: any) => {
-      if (middleware.destroy && typeof middleware.destroy === 'function') {
-        middleware.destroy();
-      }
-    });
-    this._middleware = [];
-  }
-
-  /**
    * Add a middleware function to the engine's middleware stack.
    *
    * @param middleware - The middleware function to add.
    */
   push<Params, Result>(middleware: JsonRpcMiddleware<Params, Result>): void {
     this._middleware.push(middleware as JsonRpcMiddleware<unknown, unknown>);
+  }
+
+  /**
+   * Calls the `destroy()` function of any middleware with that property and clears
+   * the middleware array.
+   */
+  cleanup(): void {
+    this._middleware.forEach(
+      (middleware: JsonRpcMiddleware<unknown, unknown>) => {
+        if (
+          // `in` walks the prototype chain, which is probably the desired
+          // behavior here.
+          'destroy' in middleware &&
+          typeof middleware.destroy === 'function'
+        ) {
+          middleware.destroy();
+        }
+      },
+    );
+    this._middleware = [];
   }
 
   /**
