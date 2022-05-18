@@ -17,7 +17,6 @@ describe('JsonRpcEngine', () => {
     );
   });
 
-
   it('handle: returns error for invalid request value', async () => {
     const engine = new JsonRpcEngine();
     let response: any = await engine.handle(null as any);
