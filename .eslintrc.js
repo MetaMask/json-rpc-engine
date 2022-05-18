@@ -1,24 +1,27 @@
 module.exports = {
   root: true,
 
-  plugins: ['import'],
-
-  extends: ['@metamask/eslint-config', '@metamask/eslint-config-nodejs'],
-
-  rules: {
-    'prefer-object-spread': 'off',
-  },
+  extends: ['@metamask/eslint-config'],
 
   overrides: [
     {
       files: ['*.ts'],
       extends: ['@metamask/eslint-config-typescript'],
     },
+
     {
-      files: ['test/*'],
-      extends: ['@metamask/eslint-config-mocha'],
+      files: ['*.js'],
+      parserOptions: {
+        sourceType: 'script',
+      },
+      extends: ['@metamask/eslint-config-nodejs'],
+    },
+
+    {
+      files: ['*.test.ts', '*.test.js'],
+      extends: ['@metamask/eslint-config-jest'],
     },
   ],
 
-  ignorePatterns: ['!.eslintrc.js', '.nyc*', 'coverage/', 'dist/'],
+  ignorePatterns: ['!.eslintrc.js', '!.prettierrc.js', 'dist/'],
 };

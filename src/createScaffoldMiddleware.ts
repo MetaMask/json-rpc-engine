@@ -1,7 +1,19 @@
-import { Json, JsonRpcMiddleware, JsonRpcSuccess } from './JsonRpcEngine';
+import { Json, JsonRpcSuccess } from '@metamask/utils';
+import { JsonRpcMiddleware } from './JsonRpcEngine';
 
-type ScaffoldMiddlewareHandler<T, U> = JsonRpcMiddleware<T, U> | Json;
+type ScaffoldMiddlewareHandler<Params, Result> =
+  | JsonRpcMiddleware<Params, Result>
+  | Json;
 
+/**
+ * Creates a middleware function from an object of RPC method handler functions,
+ * keyed to particular method names. If a method corresponding to a key of this
+ * object is requested, this middleware will pass it to the corresponding
+ * handler and return the result.
+ *
+ * @param handlers - The RPC method handler functions.
+ * @returns The scaffold middleware function.
+ */
 export function createScaffoldMiddleware(handlers: {
   [methodName: string]: ScaffoldMiddlewareHandler<unknown, unknown>;
 }): JsonRpcMiddleware<unknown, unknown> {
@@ -11,6 +23,7 @@ export function createScaffoldMiddleware(handlers: {
     if (handler === undefined) {
       return next();
     }
+
     // if handler is fn, call as middleware
     if (typeof handler === 'function') {
       return handler(req, res, next, end);
