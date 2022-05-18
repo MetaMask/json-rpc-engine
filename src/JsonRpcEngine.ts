@@ -6,7 +6,6 @@ import {
   JsonRpcResponse,
   JsonRpcNotification,
   isJsonRpcRequest,
-  isNullOrUndefined,
 } from '@metamask/utils';
 import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
 
@@ -49,7 +48,8 @@ interface JsonRpcEngineArgs {
    * defined as a JSON-RPC request without an `id` property. If this option is
    * _not_ provided, notifications will be treated the same as requests. If this
    * option _is_ provided, notifications will be passed to the handler
-   * function without touching the engine's middleware stack.
+   * function without touching the engine's middleware stack. This function
+   * should not** throw or reject.
    */
   notificationHandler?: JsonRpcNotificationHandler<unknown>;
 }
@@ -72,7 +72,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * without an `id` property. If this option is _not_ provided, notifications
    * will be treated the same as requests. If this option _is_ provided,
    * notifications will be passed to the handler function without touching
-   * the engine's middleware stack.
+   * the engine's middleware stack. This function **should not** throw or
+   * reject.
    */
   constructor({ notificationHandler }: JsonRpcEngineArgs = {}) {
     super();
@@ -239,7 +240,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
           // Filter out falsy responses from notifications
         )
       ).filter(
-        (response) => !isNullOrUndefined(response),
+        // Filter out any notification responses.
+        (response) => response !== undefined,
       ) as JsonRpcResponse<unknown>[];
 
       // 3. Return batch response
@@ -265,10 +267,16 @@ export class JsonRpcEngine extends SafeEventEmitter {
   private _promiseHandle(
     req: JsonRpcRequest<unknown> | JsonRpcNotification<unknown>,
   ): Promise<JsonRpcResponse<unknown> | void> {
-    return new Promise((resolve) => {
-      this._handle(req, (_err, res) => {
-        // There will always be a response, and it will always have any error
-        // that is caught and propagated.
+    return new Promise((resolve, reject) => {
+      this._handle(req, (error, res) => {
+        // For notifications, the response will be `undefined`, and any caught
+        // errors are unexpected and should be surfaced to the caller.
+        if (error && res === undefined) {
+          reject(error);
+        }
+
+        // Excepting notifications, there will always be a response, and it will
+        // always have any error that is caught and propagated.
         resolve(res);
       });
     });
@@ -324,7 +332,11 @@ export class JsonRpcEngine extends SafeEventEmitter {
     // We can't use isJsonRpcNotification here because that narrows callerReq to
     // "never" after the if clause for unknown reasons.
     if (this._notificationHandler && !isJsonRpcRequest(callerReq)) {
-      await this._notificationHandler(callerReq);
+      try {
+        await this._notificationHandler(callerReq);
+      } catch (error) {
+        return callback(error);
+      }
       return callback(null);
     }
 

@@ -91,6 +91,43 @@ describe('JsonRpcEngine', () => {
     expect(middleware).not.toHaveBeenCalled();
   });
 
+  it('handle: re-throws errors from notification handlers (async)', async () => {
+    const notificationHandler = jest.fn().mockImplementation(() => {
+      throw new Error('baz');
+    });
+    const engine = new JsonRpcEngine({ notificationHandler });
+
+    await expect(engine.handle({ jsonrpc, method: 'foo' })).rejects.toThrow(
+      new Error('baz'),
+    );
+    expect(notificationHandler).toHaveBeenCalledTimes(1);
+    expect(notificationHandler).toHaveBeenCalledWith({
+      jsonrpc,
+      method: 'foo',
+    });
+  });
+
+  it('handle: re-throws errors from notification handlers (callback)', async () => {
+    const notificationHandler = jest.fn().mockImplementation(() => {
+      throw new Error('baz');
+    });
+    const engine = new JsonRpcEngine({ notificationHandler });
+
+    await new Promise<void>((resolve) => {
+      engine.handle({ jsonrpc, method: 'foo' }, (error, response) => {
+        expect(error).toStrictEqual(new Error('baz'));
+        expect(response).toBeUndefined();
+
+        expect(notificationHandler).toHaveBeenCalledTimes(1);
+        expect(notificationHandler).toHaveBeenCalledWith({
+          jsonrpc,
+          method: 'foo',
+        });
+        resolve();
+      });
+    });
+  });
+
   it('handle: basic middleware test 1', async () => {
     const engine = new JsonRpcEngine();
 
