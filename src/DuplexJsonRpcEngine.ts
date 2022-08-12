@@ -51,7 +51,7 @@ export class DuplexJsonRpcEngine {
    *
    * @param middleware - The middleware function to add.
    */
-  pushReceiverMiddleware(
+  addReceiverMiddleware(
     middleware: JsonRpcMiddleware<unknown, unknown>,
   ): void {
     this.#receiver.addMiddleware(middleware as JsonRpcMiddleware<unknown, unknown>);
@@ -62,12 +62,12 @@ export class DuplexJsonRpcEngine {
    *
    * @param middleware - The middleware function to add.
    */
-  pushSenderMiddleware(middleware: JsonRpcMiddleware<unknown, unknown>): void {
+  addSenderMiddleware(middleware: JsonRpcMiddleware<unknown, unknown>): void {
     this.#sender.addMiddleware(middleware as JsonRpcMiddleware<unknown, unknown>);
   }
 
   /**
-   * Returns the receiving pipeline as a middleware function that can be pushed
+   * Returns the receiving pipeline as a middleware function that can be added
    * to other engines.
    *
    * @returns The receiving pipeline as a middleware function.
@@ -77,7 +77,7 @@ export class DuplexJsonRpcEngine {
   }
 
   /**
-   * Returns the sending pipeline as a middleware function that can be pushed
+   * Returns the sending pipeline as a middleware function that can be added
    * to other engines.
    *
    * @returns The sending pipeline as a middleware function.
