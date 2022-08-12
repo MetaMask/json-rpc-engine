@@ -4,3 +4,4 @@ export * from './getUniqueId';
 export * from './idRemapMiddleware';
 export * from './JsonRpcEngine';
 export * from './mergeMiddleware';
+export * from './DuplexJsonRpcEngine';
