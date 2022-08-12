@@ -159,4 +159,13 @@ export class DuplexJsonRpcEngine {
     }
     return this.#sender.handle(argument);
   }
+
+  /**
+   * Destroys this engine and its sending and receiving middleware stacks. See
+   * {@link JsonRpcEngine.destroy} for details.
+   */
+  destroy() {
+    this.#receiver.destroy();
+    this.#sender.destroy();
+  }
 }
