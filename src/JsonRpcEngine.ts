@@ -54,8 +54,9 @@ interface JsonRpcEngineArgs {
    * defined as a JSON-RPC request without an `id` property. If this option is
    * _not_ provided, notifications will be treated the same as requests. If this
    * option _is_ provided, notifications will be passed to the handler
-   * function without touching the engine's middleware stack. This function
-   * should not** throw or reject.
+   * function without touching the engine's middleware stack.
+   *
+   * This function should not throw or reject.
    */
   notificationHandler?: JsonRpcNotificationHandler<unknown>;
 }
@@ -83,8 +84,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * without an `id` property. If this option is _not_ provided, notifications
    * will be treated the same as requests. If this option _is_ provided,
    * notifications will be passed to the handler function without touching
-   * the engine's middleware stack. This function **should not** throw or
-   * reject.
+   * the engine's middleware stack. This function should not throw or reject.
    */
   constructor({ notificationHandler }: JsonRpcEngineArgs = {}) {
     super();
@@ -283,7 +283,6 @@ export class JsonRpcEngine extends SafeEventEmitter {
         await Promise.all(
           // 1. Begin executing each request in the order received
           reqs.map(this._promiseHandle.bind(this)),
-          // Filter out falsy responses from notifications
         )
       ).filter(
         // Filter out any notification responses.
@@ -363,11 +362,13 @@ export class JsonRpcEngine extends SafeEventEmitter {
       );
 
       if (this._notificationHandler && !isJsonRpcRequest(callerReq)) {
-        // Do not reply to notifications, even malformed ones.
+        // Do not reply to notifications, even if they are malformed.
         return callback(null);
       }
 
       return callback(error, {
+        // Typecast: This could be a notification, but we want to access the
+        // `id` even if it doesn't exist.
         id: (callerReq as JsonRpcRequest<unknown>).id ?? null,
         jsonrpc: '2.0',
         error,
