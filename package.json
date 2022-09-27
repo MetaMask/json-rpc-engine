@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@metamask/safe-event-emitter": "^2.0.0",
-    "@metamask/utils": "^2.0.0",
+    "@metamask/utils": "^3.0.3",
     "eth-rpc-errors": "^4.0.2"
   },
   "devDependencies": {
