@@ -1,666 +1,390 @@
-import {
-  assertIsJsonRpcSuccess,
-  assertIsJsonRpcFailure,
-  isJsonRpcFailure,
-  isJsonRpcSuccess,
-} from '@metamask/utils';
-import { ethErrors } from 'eth-rpc-errors';
-import { JsonRpcEngine, JsonRpcMiddleware } from '.';
+import { errorCodes, EthereumRpcError } from 'eth-rpc-errors';
+import { hasProperty, Json } from '@metamask/utils';
+import { JsonRpcEngine, JsonRpcMessage } from './JsonRpcEngine';
+import type { Next, ValidParam } from './JsonRpcEngine';
 
 const jsonrpc = '2.0' as const;
 
 describe('JsonRpcEngine', () => {
-  it('handle: throws on truthy, non-function callback', () => {
-    const engine = new JsonRpcEngine();
-    expect(() => engine.handle({} as any, 'foo' as any)).toThrow(
-      '"callback" must be a function if provided.',
-    );
-  });
+  describe('handle', () => {
+    describe('notification', () => {
+      it('passes the notification through middleware', async () => {
+        const middleware = jest.fn();
+        const engine = new JsonRpcEngine({ middleware: [middleware] });
+        const notification = { jsonrpc, method: 'test_request' };
 
-  it('handle: returns error for invalid request value', async () => {
-    const engine = new JsonRpcEngine();
-    let response: any = await engine.handle(null as any);
-    expect(response.error.code).toStrictEqual(-32600);
-    expect(response.result).toBeUndefined();
+        await engine.handle(notification);
 
-    response = await engine.handle(true as any);
-    expect(response.error.code).toStrictEqual(-32600);
-    expect(response.result).toBeUndefined();
-  });
-
-  it('handle: returns error for invalid request method', async () => {
-    const engine = new JsonRpcEngine();
-    const response: any = await engine.handle({ id: 1, method: null } as any);
-
-    expect(response.error.code).toStrictEqual(-32600);
-    expect(response.result).toBeUndefined();
-  });
-
-  it('handle: returns error for invalid request method with nullish id', async () => {
-    const engine = new JsonRpcEngine();
-    const response: any = await engine.handle({
-      id: undefined,
-      method: null,
-    } as any);
-
-    expect(response.error.code).toStrictEqual(-32600);
-    expect(response.result).toBeUndefined();
-  });
-
-  it('handle: returns undefined for malformed notifications', async () => {
-    const middleware = jest.fn();
-    const notificationHandler = jest.fn();
-    const engine = new JsonRpcEngine({ notificationHandler });
-    engine.push(middleware);
-
-    expect(
-      await engine.handle({ jsonrpc, method: true } as any),
-    ).toBeUndefined();
-    expect(notificationHandler).not.toHaveBeenCalled();
-    expect(middleware).not.toHaveBeenCalled();
-  });
-
-  it('handle: treats notifications as requests when no notification handler is specified', async () => {
-    const middleware = jest.fn().mockImplementation((_req, res, _next, end) => {
-      res.result = 'bar';
-      end();
-    });
-    const engine = new JsonRpcEngine();
-    engine.push(middleware);
-
-    expect(await engine.handle({ jsonrpc, method: 'foo' })).toStrictEqual({
-      jsonrpc,
-      result: 'bar',
-      id: undefined,
-    });
-    expect(middleware).toHaveBeenCalledTimes(1);
-  });
-
-  it('handle: forwards notifications to handlers', async () => {
-    const middleware = jest.fn();
-    const notificationHandler = jest.fn();
-    const engine = new JsonRpcEngine({ notificationHandler });
-    engine.push(middleware);
-
-    expect(await engine.handle({ jsonrpc, method: 'foo' })).toBeUndefined();
-    expect(notificationHandler).toHaveBeenCalledTimes(1);
-    expect(notificationHandler).toHaveBeenCalledWith({
-      jsonrpc,
-      method: 'foo',
-    });
-    expect(middleware).not.toHaveBeenCalled();
-  });
-
-  it('handle: re-throws errors from notification handlers (async)', async () => {
-    const notificationHandler = jest.fn().mockImplementation(() => {
-      throw new Error('baz');
-    });
-    const engine = new JsonRpcEngine({ notificationHandler });
-
-    await expect(engine.handle({ jsonrpc, method: 'foo' })).rejects.toThrow(
-      new Error('baz'),
-    );
-    expect(notificationHandler).toHaveBeenCalledTimes(1);
-    expect(notificationHandler).toHaveBeenCalledWith({
-      jsonrpc,
-      method: 'foo',
-    });
-  });
-
-  it('handle: re-throws errors from notification handlers (callback)', async () => {
-    const notificationHandler = jest.fn().mockImplementation(() => {
-      throw new Error('baz');
-    });
-    const engine = new JsonRpcEngine({ notificationHandler });
-
-    await new Promise<void>((resolve) => {
-      engine.handle({ jsonrpc, method: 'foo' }, (error, response) => {
-        expect(error).toStrictEqual(new Error('baz'));
-        expect(response).toBeUndefined();
-
-        expect(notificationHandler).toHaveBeenCalledTimes(1);
-        expect(notificationHandler).toHaveBeenCalledWith({
-          jsonrpc,
-          method: 'foo',
+        expect(middleware).toHaveBeenCalledTimes(1);
+        expect(middleware).toHaveBeenCalledWith({
+          request: notification,
+          context: {},
+          next: expect.any(Function),
         });
-        resolve();
       });
-    });
-  });
 
-  it('handle: basic middleware test 1', async () => {
-    const engine = new JsonRpcEngine();
+      it('returns no response', async () => {
+        const engine = new JsonRpcEngine({ middleware: [jest.fn()] });
+        const notification = { jsonrpc, method: 'test_request' };
 
-    engine.push(function (_req, res, _next, end) {
-      res.result = 42;
-      end();
-    });
+        const response = await engine.handle(notification);
 
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeNull();
-        assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
-        resolve();
-      });
-    });
-  });
-
-  it('handle: basic middleware test 2', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (req, res, _next, end) {
-      req.method = 'banana';
-      res.result = 42;
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeNull();
-        assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
-        expect(payload.method).toStrictEqual('hello');
-        resolve();
-      });
-    });
-  });
-
-  it('handle (async): basic middleware test', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res, _next, end) {
-      res.result = 42;
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    const res = await engine.handle(payload);
-    assertIsJsonRpcSuccess(res);
-    expect(res.result).toStrictEqual(42);
-  });
-
-  it('allow null result', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res, _next, end) {
-      res.result = null;
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeNull();
-        assertIsJsonRpcSuccess(res);
-        expect(res.result).toBeNull();
-        resolve();
-      });
-    });
-  });
-
-  it('interacting middleware test', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (req: any, _res, next, _end) {
-      req.resultShouldBe = 42;
-      next();
-    });
-
-    engine.push(function (req: any, res, _next, end) {
-      res.result = req.resultShouldBe;
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeNull();
-        assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
-        resolve();
-      });
-    });
-  });
-
-  it('middleware ending request before all middlewares applied', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res, _next, end) {
-      res.result = 42;
-      end();
-    });
-
-    engine.push(function (_req, _res, _next, _end) {
-      throw new Error('Test should have ended already.');
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeNull();
-        assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
-        resolve();
-      });
-    });
-  });
-
-  it('erroring middleware test: end(error)', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, _res, _next, end) {
-      end(new Error('no bueno'));
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeDefined();
-        expect(res).toBeDefined();
-        assertIsJsonRpcFailure(res);
-        expect(isJsonRpcSuccess(res)).toBe(false);
-        resolve();
-      });
-    });
-  });
-
-  it('erroring middleware test: res.error -> next()', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res, next, _end) {
-      res.error = ethErrors.rpc.internal({ message: 'foobar' });
-      next();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeDefined();
-        expect(res).toBeDefined();
-        assertIsJsonRpcFailure(res);
-        expect(isJsonRpcSuccess(res)).toBe(false);
-        resolve();
-      });
-    });
-  });
-
-  it('erroring middleware test: res.error -> end()', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res, _next, end) {
-      res.error = ethErrors.rpc.internal({ message: 'foobar' });
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeDefined();
-        expect(res).toBeDefined();
-        expect(isJsonRpcFailure(res)).toBe(true);
-        expect(isJsonRpcSuccess(res)).toBe(false);
-        resolve();
-      });
-    });
-  });
-
-  it('erroring middleware test: non-function passsed to next()', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, _res, next, _end) {
-      next(true as any);
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res) {
-        expect(err).toBeDefined();
-        expect(res).toBeDefined();
-        assertIsJsonRpcFailure(res);
-        expect(res.error.code).toStrictEqual(-32603);
-        expect(
-          res.error.message.startsWith(
-            'JsonRpcEngine: "next" return handlers must be functions.',
-          ),
-        ).toBe(true);
-        expect(isJsonRpcSuccess(res)).toBe(false);
-        resolve();
-      });
-    });
-  });
-
-  it('empty middleware test', async () => {
-    const engine = new JsonRpcEngine();
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, _res) {
-        expect(err).toBeDefined();
-        resolve();
-      });
-    });
-  });
-
-  it('handle: batch payloads', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (req, res, _next, end) {
-      if (req.id === 4) {
-        delete res.result;
-        res.error = ethErrors.rpc.internal({ message: 'foobar' });
-        return end(res.error);
-      }
-      res.result = req.id;
-      return end();
-    });
-
-    const payloadA = { id: 1, jsonrpc, method: 'hello' };
-    const payloadB = { id: 2, jsonrpc, method: 'hello' };
-    const payloadC = { id: 3, jsonrpc, method: 'hello' };
-    const payloadD = { id: 4, jsonrpc, method: 'hello' };
-    const payloadE = { id: 5, jsonrpc, method: 'hello' };
-    const payload = [payloadA, payloadB, payloadC, payloadD, payloadE];
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res: any) {
-        expect(err).toBeNull();
-        expect(res).toBeInstanceOf(Array);
-        expect(res[0].result).toStrictEqual(1);
-        expect(res[1].result).toStrictEqual(2);
-        expect(res[2].result).toStrictEqual(3);
-        expect(isJsonRpcSuccess(res[3])).toBe(false);
-        expect(res[3].error.code).toStrictEqual(-32603);
-        expect(res[4].result).toStrictEqual(5);
-        resolve();
-      });
-    });
-  });
-
-  it('handle: batch payloads (async signature)', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (req, res, _next, end) {
-      if (req.id === 4) {
-        delete res.result;
-        res.error = ethErrors.rpc.internal({ message: 'foobar' });
-        return end(res.error);
-      }
-      res.result = req.id;
-      return end();
-    });
-
-    const payloadA = { id: 1, jsonrpc, method: 'hello' };
-    const payloadB = { id: 2, jsonrpc, method: 'hello' };
-    const payloadC = { id: 3, jsonrpc, method: 'hello' };
-    const payloadD = { id: 4, jsonrpc, method: 'hello' };
-    const payloadE = { id: 5, jsonrpc, method: 'hello' };
-    const payload = [payloadA, payloadB, payloadC, payloadD, payloadE];
-
-    const res: any = await engine.handle(payload);
-    expect(res).toBeInstanceOf(Array);
-    expect(res[0].result).toStrictEqual(1);
-    expect(res[1].result).toStrictEqual(2);
-    expect(res[2].result).toStrictEqual(3);
-    expect(isJsonRpcSuccess(res[3])).toBe(false);
-    expect(res[3].error.code).toStrictEqual(-32603);
-    expect(res[4].result).toStrictEqual(5);
-  });
-
-  it('handle: batch payload with bad request object', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (req, res, _next, end) {
-      res.result = req.id;
-      return end();
-    });
-
-    const payloadA = { id: 1, jsonrpc, method: 'hello' };
-    const payloadB = true;
-    const payloadC = { id: 3, jsonrpc, method: 'hello' };
-    const payload = [payloadA, payloadB, payloadC];
-
-    const res: any = await engine.handle(payload as any);
-    expect(res).toBeInstanceOf(Array);
-    expect(res[0].result).toStrictEqual(1);
-    expect(isJsonRpcSuccess(res[1])).toBe(false);
-    expect(res[1].error.code).toStrictEqual(-32600);
-    expect(res[2].result).toStrictEqual(3);
-  });
-
-  it('basic notifications', async () => {
-    const engine = new JsonRpcEngine();
-
-    await new Promise<void>((resolve) => {
-      engine.once('notification', (notif) => {
-        expect(notif.method).toStrictEqual('test_notif');
-        resolve();
-      });
-      engine.emit('notification', { jsonrpc, method: 'test_notif' });
-    });
-  });
-
-  it('return handlers test', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res: any, next, _end) {
-      next(function (cb) {
-        res.sawReturnHandler = true;
-        cb();
+        expect(response).toBeUndefined();
       });
     });
 
-    engine.push(function (_req, res, _next, end) {
-      res.result = true;
-      end();
-    });
+    describe('request', () => {
+      it('passes the request through middleware', async () => {
+        const middleware = jest.fn().mockImplementation(() => null);
+        const engine = new JsonRpcEngine({ middleware: [middleware] });
+        const request = { id: 1, jsonrpc, method: 'test_request' };
 
-    const payload = { id: 1, jsonrpc, method: 'hello' };
+        await engine.handle(request);
 
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, res: any) {
-        expect(err).toBeNull();
-        expect(res).toBeDefined();
-        expect(res.sawReturnHandler).toBe(true);
-        resolve();
+        expect(middleware).toHaveBeenCalledTimes(1);
+        expect(middleware).toHaveBeenCalledWith({
+          request,
+          context: {},
+          next: expect.any(Function),
+        });
       });
-    });
-  });
 
-  it('return order of events', async () => {
-    const engine = new JsonRpcEngine();
+      it('returns a response', async () => {
+        const engine = new JsonRpcEngine({ middleware: [() => null] });
+        const request = { id: 1, jsonrpc, method: 'test_request' };
 
-    const events: string[] = [];
+        const response = await engine.handle(request);
 
-    engine.push(function (_req, _res, next, _end) {
-      events.push('1-next');
-      next(function (cb) {
-        events.push('1-return');
-        cb();
-      });
-    });
-
-    engine.push(function (_req, _res, next, _end) {
-      events.push('2-next');
-      next(function (cb) {
-        events.push('2-return');
-        cb();
+        expect(response).toStrictEqual({
+          id: 1,
+          jsonrpc,
+          result: null,
+        });
       });
     });
 
-    engine.push(function (_req, res, _next, end) {
-      events.push('3-end');
-      res.result = true;
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, function (err, _res) {
-        expect(err).toBeNull();
-        expect(events[0]).toStrictEqual('1-next');
-        expect(events[1]).toStrictEqual('2-next');
-        expect(events[2]).toStrictEqual('3-end');
-        expect(events[3]).toStrictEqual('2-return');
-        expect(events[4]).toStrictEqual('1-return');
-        resolve();
+    it('allows context to be modified on the way down the stack', async () => {
+      const engine = new JsonRpcEngine({
+        middleware: [
+          ({ context, next, request }) => {
+            context.answer = 42;
+            return next(request);
+          },
+          ({ context }) => {
+            if (
+              hasProperty(context, 'answer') &&
+              typeof context.answer === 'number'
+            ) {
+              return context.answer;
+            }
+            throw new Error('Answer missing from context');
+          },
+        ],
       });
-    });
-  });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
 
-  it('calls back next handler even if error', async () => {
-    const engine = new JsonRpcEngine();
+      const response = await engine.handle(request);
 
-    let sawNextReturnHandlerCalled = false;
-
-    engine.push(function (_req, _res, next, _end) {
-      next(function (cb) {
-        sawNextReturnHandlerCalled = true;
-        cb();
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 42,
       });
     });
 
-    engine.push(function (_req, _res, _next, end) {
-      end(new Error('boom'));
-    });
+    it('allows context to be modified on the way up the stack', async () => {
+      const engine = new JsonRpcEngine({
+        middleware: [
+          async ({ context, next, request }) => {
+            const result = await next(request);
+            // eslint-disable-next-line jest/no-if
+            if (
+              hasProperty(context, 'answer') &&
+              typeof context.answer === 'number'
+            ) {
+              return context.answer;
+            }
+            return result;
+          },
+          ({ context }) => {
+            context.answer = 10;
+            return 42;
+          },
+        ],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
 
-    const payload = { id: 1, jsonrpc, method: 'hello' };
+      const response = await engine.handle(request);
 
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, (err, _res) => {
-        expect(err).toBeDefined();
-        expect(sawNextReturnHandlerCalled).toBe(true);
-        resolve();
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 10,
       });
     });
-  });
 
-  it('handles error in next handler', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, _res, next, _end) {
-      next(function (_cb) {
-        throw new Error('foo');
-      });
-    });
-
-    engine.push(function (_req, res, _next, end) {
-      res.result = 42;
-      end();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, (err: any, _res) => {
-        expect(err).toBeDefined();
-        expect(err.message).toStrictEqual('foo');
-        resolve();
-      });
-    });
-  });
-
-  it('handles failure to end request', async () => {
-    const engine = new JsonRpcEngine();
-
-    engine.push(function (_req, res, next, _end) {
-      res.result = 42;
-      next();
-    });
-
-    const payload = { id: 1, jsonrpc, method: 'hello' };
-
-    await new Promise<void>((resolve) => {
-      engine.handle(payload, (err: any, res) => {
-        expect(
-          err.message.startsWith('JsonRpcEngine: Nothing ended request:'),
-        ).toBe(true);
-        expect(isJsonRpcSuccess(res)).toBe(false);
-        resolve();
-      });
-    });
-  });
-
-  it('handles batch request processing error', async () => {
-    const engine = new JsonRpcEngine();
-    jest
-      .spyOn(engine as any, '_promiseHandle')
-      .mockRejectedValue(new Error('foo'));
-
-    await new Promise<void>((resolve) => {
-      engine.handle([{}] as any, (err: any) => {
-        expect(err.message).toStrictEqual('foo');
-        resolve();
-      });
-    });
-  });
-
-  it('handles batch request processing error (async)', async () => {
-    const engine = new JsonRpcEngine();
-    jest
-      .spyOn(engine as any, '_promiseHandle')
-      .mockRejectedValue(new Error('foo'));
-
-    await expect(engine.handle([{}] as any)).rejects.toThrow('foo');
-  });
-
-  describe('destroy', () => {
-    const destroyedError = new Error(
-      'This engine is destroyed and can no longer be used.',
-    );
-
-    it('prevents the engine from being used', () => {
-      const engine = new JsonRpcEngine();
-      engine.destroy();
-
-      expect(() => engine.handle([])).toThrow(destroyedError);
-      expect(() => engine.asMiddleware()).toThrow(destroyedError);
-      expect(() => engine.push(() => undefined)).toThrow(destroyedError);
-    });
-
-    it('destroying is idempotent', () => {
-      const engine = new JsonRpcEngine();
-      engine.destroy();
-      expect(() => engine.destroy()).not.toThrow();
-      expect(() => engine.asMiddleware()).toThrow(destroyedError);
-    });
-
-    it('calls the destroy method of middleware functions', async () => {
-      const engine = new JsonRpcEngine();
-
-      engine.push((_req, res, next, _end) => {
-        res.result = 42;
-        next();
-      });
-
-      const destroyMock = jest.fn();
-      const destroyableMiddleware: JsonRpcMiddleware<unknown, unknown> = (
-        _req,
-        _res,
-        _next,
-        end,
-      ) => {
-        end();
+    it('allows the request to be modified on the way down the stack', async () => {
+      const addOneParam = ({
+        next,
+        request,
+      }: {
+        next: Next<JsonRpcMessage<ValidParam>, Json>;
+        request: JsonRpcMessage<ValidParam>;
+      }) => {
+        if (Array.isArray(request.params)) {
+          request.params.push('additional parameter');
+        }
+        return next(request);
       };
-      destroyableMiddleware.destroy = destroyMock;
-      engine.push(destroyableMiddleware);
+      const countParams = ({
+        request,
+      }: {
+        request: JsonRpcMessage<ValidParam>;
+      }) => request.params?.length;
+      const engine = new JsonRpcEngine({
+        middleware: [addOneParam, countParams],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request', params: [] };
 
-      engine.destroy();
-      expect(destroyMock).toHaveBeenCalledTimes(1);
+      const response = await engine.handle(request);
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 1,
+      });
+    });
+
+    it('allows the request to be modified on the way up the stack', async () => {
+      const throwIfSecret = async ({
+        next,
+        request,
+      }: {
+        next: Next<JsonRpcMessage<ValidParam>, Json>;
+        request: JsonRpcMessage<ValidParam>;
+      }) => {
+        const result = await next(request);
+        // eslint-disable-next-line jest/no-if
+        if (Array.isArray(request.params) && request.params[0] === 'secret') {
+          throw new Error('Secret found!');
+        }
+        return result;
+      };
+
+      const processSecret = ({
+        request,
+      }: {
+        request: JsonRpcMessage<ValidParam>;
+      }) => {
+        if (
+          Array.isArray(request.params) &&
+          typeof request.params[0] === 'string'
+        ) {
+          const answer = request.params[0].length;
+          request.params.pop(); // hide the secret
+          return answer;
+        }
+        throw new Error('Unrecognized request parameters');
+      };
+      const engine = new JsonRpcEngine({
+        middleware: [throwIfSecret, processSecret],
+      });
+      const request = {
+        id: 1,
+        jsonrpc,
+        method: 'test_request',
+        params: ['secret'],
+      };
+
+      const response = await engine.handle(request);
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 6,
+      });
+    });
+
+    it('allows the response to be modified on the way up the stack', async () => {
+      const addOneToResult = async ({
+        next,
+        request,
+      }: {
+        next: Next<JsonRpcMessage<ValidParam>, Json>;
+        request: JsonRpcMessage<ValidParam>;
+      }) => {
+        const result = await next(request);
+        // eslint-disable-next-line jest/no-if
+        if (typeof result === 'number') {
+          return result + 1;
+        }
+        throw new Error('Result expected to be number, but was not');
+      };
+      const engine = new JsonRpcEngine({
+        middleware: [addOneToResult, () => 10],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      const response = await engine.handle(request);
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 11,
+      });
+    });
+
+    it('sends the request back up the stack if next is not called', async () => {
+      const unreachableMiddleware = jest.fn().mockImplementation(() => {
+        throw new Error('This should be unreachable');
+      });
+      const engine = new JsonRpcEngine({
+        middleware: [() => null, unreachableMiddleware],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      const response = await engine.handle(request);
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: null,
+      });
+      expect(unreachableMiddleware).not.toHaveBeenCalled();
+    });
+
+    it('calls the "next" handler for an unhandled request', async () => {
+      const lastNext = jest.fn().mockImplementation(() => 42);
+      const engine = new JsonRpcEngine({
+        middleware: [
+          ({ next, request }) => {
+            // forward all requests
+            return next(request);
+          },
+        ],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      const response = await engine.handle(request, { next: lastNext });
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 42,
+      });
+      expect(lastNext).toHaveBeenCalledWith(request);
+    });
+
+    it('does not call the "next" handler for an handled request', async () => {
+      const unreachableNext = jest.fn().mockImplementation(() => {
+        throw new Error('This should be unreachable');
+      });
+      const engine = new JsonRpcEngine({
+        middleware: [() => 42],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      const response = await engine.handle(request, { next: unreachableNext });
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 42,
+      });
+      expect(unreachableNext).not.toHaveBeenCalled();
+    });
+
+    it('allows middleware to catch an error from later middleware', async () => {
+      const returnZeroOnError = async ({
+        next,
+        request,
+      }: {
+        next: Next<JsonRpcMessage<ValidParam>, Json>;
+        request: JsonRpcMessage<ValidParam>;
+      }) => {
+        try {
+          return await next(request);
+        } catch (_error) {
+          return 0;
+        }
+      };
+
+      const alwaysThrow = () => {
+        throw new Error('Test error');
+      };
+      const engine = new JsonRpcEngine({
+        middleware: [returnZeroOnError, alwaysThrow],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      const response = await engine.handle(request);
+
+      expect(response).toStrictEqual({
+        id: 1,
+        jsonrpc,
+        result: 0,
+      });
+    });
+
+    it('re-throws a JSON-RPC error', async () => {
+      const error = new EthereumRpcError(
+        errorCodes.rpc.internal,
+        'JsonRpcEngine: test error',
+      );
+      const engine = new JsonRpcEngine({
+        middleware: [
+          () => {
+            throw error;
+          },
+        ],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      await expect(engine.handle(request)).rejects.toThrow(error);
+    });
+
+    it('throws non-standard error as a JSON-RPC internal error', async () => {
+      const error = new Error('test');
+      const engine = new JsonRpcEngine({
+        middleware: [
+          () => {
+            throw error;
+          },
+        ],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      await expect(engine.handle(request)).rejects.toThrow(
+        `JsonRpcEngine: Internal error 'test'`,
+      );
+    });
+
+    it('throws non-error as a JSON-RPC internal error', async () => {
+      const engine = new JsonRpcEngine({
+        middleware: [
+          () => {
+            throw 42;
+          },
+        ],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      await expect(engine.handle(request)).rejects.toThrow(
+        'JsonRpcEngine: Internal non-Error thrown',
+      );
+    });
+
+    it('throws when the request is unhandled', async () => {
+      const engine = new JsonRpcEngine({
+        middleware: [
+          ({ next, request }) => {
+            return next(request);
+          },
+        ],
+      });
+      const request = { id: 1, jsonrpc, method: 'test_request' };
+
+      await expect(engine.handle(request)).rejects.toThrow('test');
     });
   });
 });

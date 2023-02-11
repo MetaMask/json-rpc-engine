@@ -1,9 +1,12 @@
-import { Json, JsonRpcSuccess } from '@metamask/utils';
-import { JsonRpcMiddleware } from './JsonRpcEngine';
+import { Json } from '@metamask/utils';
+import type {
+  JsonRpcMessage,
+  JsonRpcMiddleware,
+  Next,
+  ValidParam,
+} from './JsonRpcEngine';
 
-type ScaffoldMiddlewareHandler<Params, Result> =
-  | JsonRpcMiddleware<Params, Result>
-  | Json;
+type ScaffoldMiddlewareHandler = Next<JsonRpcMessage<ValidParam>, Json> | Json;
 
 /**
  * Creates a middleware function from an object of RPC method handler functions,
@@ -15,21 +18,25 @@ type ScaffoldMiddlewareHandler<Params, Result> =
  * @returns The scaffold middleware function.
  */
 export function createScaffoldMiddleware(handlers: {
-  [methodName: string]: ScaffoldMiddlewareHandler<unknown, unknown>;
-}): JsonRpcMiddleware<unknown, unknown> {
-  return (req, res, next, end) => {
-    const handler = handlers[req.method];
+  [methodName: string]: ScaffoldMiddlewareHandler;
+}): JsonRpcMiddleware<JsonRpcMessage<ValidParam>, Json> {
+  return ({
+    next,
+    request,
+  }: {
+    next: Next<JsonRpcMessage<ValidParam>, Json>;
+    request: JsonRpcMessage<ValidParam>;
+  }) => {
+    const handler = handlers[request.method];
     // if no handler, return
     if (handler === undefined) {
-      return next();
+      return next(request);
     }
 
     // if handler is fn, call as middleware
     if (typeof handler === 'function') {
-      return handler(req, res, next, end);
+      return handler(request);
     }
-    // if handler is some other value, use as result
-    (res as JsonRpcSuccess<unknown>).result = handler;
-    return end();
+    return handler;
   };
 }
