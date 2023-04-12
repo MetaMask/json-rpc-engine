@@ -369,7 +369,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       const error = new EthereumRpcError(
         errorCodes.rpc.invalidRequest,
         `Must specify a string method. Received: ${typeof callerReq.method}`,
-        { request: callerReq },
+        { request: callerReq as Json },
       );
 
       if (this.#notificationHandler && !isJsonRpcRequest(callerReq)) {
@@ -382,7 +382,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
         // `id` even if it doesn't exist.
         id: (callerReq as JsonRpcRequest).id ?? null,
         jsonrpc: '2.0',
-        error: error.serialize() as JsonRpcError,
+        error,
       });
     }
 
