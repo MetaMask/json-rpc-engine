@@ -1,5 +1,10 @@
-import { Json, JsonRpcParams, JsonRpcRequest } from '@metamask/utils';
-import { JsonRpcMiddleware, PendingJsonRpcResponse } from './JsonRpcEngine';
+import {
+  Json,
+  JsonRpcParams,
+  JsonRpcRequest,
+  PendingJsonRpcResponse,
+} from '@metamask/utils';
+import { JsonRpcMiddleware } from './JsonRpcEngine';
 
 export type AsyncJsonRpcEngineNextCallback = () => Promise<void>;
 

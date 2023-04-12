@@ -8,16 +8,9 @@ import {
   isJsonRpcRequest,
   Json,
   JsonRpcParams,
+  PendingJsonRpcResponse,
 } from '@metamask/utils';
 import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
-
-export type PendingJsonRpcResponse<Result extends Json> = Omit<
-  JsonRpcResponse<Result>,
-  'error' | 'result'
-> & {
-  result?: Result;
-  error?: JsonRpcError;
-};
 
 export type JsonRpcEngineCallbackError = Error | JsonRpcError | null;
 
