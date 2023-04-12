@@ -3,6 +3,7 @@ import {
   hasProperty,
   JsonRpcRequest,
 } from '@metamask/utils';
+
 import { JsonRpcEngine, mergeMiddleware } from '.';
 
 const jsonrpc = '2.0' as const;

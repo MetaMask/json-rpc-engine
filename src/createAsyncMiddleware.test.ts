@@ -1,4 +1,5 @@
 import { assertIsJsonRpcSuccess } from '@metamask/utils';
+
 import { JsonRpcEngine, createAsyncMiddleware } from '.';
 
 const jsonrpc = '2.0' as const;
@@ -20,7 +21,7 @@ describe('createAsyncMiddleware', () => {
         expect(err).toBeNull();
         expect(res).toBeDefined();
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
+        expect(res.result).toBe(42);
         resolve();
       });
     });
@@ -31,9 +32,9 @@ describe('createAsyncMiddleware', () => {
 
     engine.push(
       createAsyncMiddleware(async (_req, res, next) => {
-        expect(res.result).not.toBeDefined();
+        expect(res.result).toBeUndefined();
         await next(); // eslint-disable-line node/callback-return
-        expect(res.result).toStrictEqual(1234);
+        expect(res.result).toBe(1234);
         // override value
         res.result = 42; // eslint-disable-line require-atomic-updates
       }),
@@ -51,7 +52,7 @@ describe('createAsyncMiddleware', () => {
         expect(err).toBeNull();
         expect(res).toBeDefined();
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
+        expect(res.result).toBe(42);
         resolve();
       });
     });

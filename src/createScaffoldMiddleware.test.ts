@@ -5,6 +5,7 @@ import {
   Json,
 } from '@metamask/utils';
 import { ethErrors } from 'eth-rpc-errors';
+
 import { JsonRpcEngine, createScaffoldMiddleware, JsonRpcMiddleware } from '.';
 
 describe('createScaffoldMiddleware', () => {
@@ -40,15 +41,15 @@ describe('createScaffoldMiddleware', () => {
     const response4 = await engine.handle({ ...payload, method: 'unknown' });
 
     assertIsJsonRpcSuccess(response1);
-    expect(response1.result).toStrictEqual('foo');
+    expect(response1.result).toBe('foo');
 
     assertIsJsonRpcSuccess(response2);
-    expect(response2.result).toStrictEqual(42);
+    expect(response2.result).toBe(42);
 
     assertIsJsonRpcFailure(response3);
-    expect(response3.error.message).toStrictEqual('method3');
+    expect(response3.error.message).toBe('method3');
 
     assertIsJsonRpcSuccess(response4);
-    expect(response4.result).toStrictEqual('passthrough');
+    expect(response4.result).toBe('passthrough');
   });
 });

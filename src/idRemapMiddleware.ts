@@ -1,4 +1,5 @@
 import { Json, JsonRpcParams } from '@metamask/utils';
+
 import { getUniqueId } from './getUniqueId';
 import { JsonRpcMiddleware } from './JsonRpcEngine';
 

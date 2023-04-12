@@ -26,10 +26,10 @@ export type JsonRpcEngineEndCallback = (
   error?: JsonRpcEngineCallbackError,
 ) => void;
 
-export interface JsonRpcMiddleware<
+export type JsonRpcMiddleware<
   Params extends JsonRpcParams,
   Result extends Json,
-> {
+> = {
   (
     req: JsonRpcRequest<Params>,
     res: PendingJsonRpcResponse<Result>,
@@ -37,7 +37,7 @@ export interface JsonRpcMiddleware<
     end: JsonRpcEngineEndCallback,
   ): void;
   destroy?: () => void | Promise<void>;
-}
+};
 
 const DESTROYED_ERROR_MESSAGE =
   'This engine is destroyed and can no longer be used.';
@@ -46,7 +46,7 @@ export type JsonRpcNotificationHandler<Params extends JsonRpcParams> = (
   notification: JsonRpcNotification<Params>,
 ) => void | Promise<void>;
 
-interface JsonRpcEngineArgs {
+type JsonRpcEngineArgs = {
   /**
    * A function for handling JSON-RPC notifications. A JSON-RPC notification is
    * defined as a JSON-RPC request without an `id` property. If this option is
@@ -57,7 +57,7 @@ interface JsonRpcEngineArgs {
    * This function should not throw or reject.
    */
   notificationHandler?: JsonRpcNotificationHandler<JsonRpcParams>;
-}
+};
 
 /**
  * A JSON-RPC request and response processor.
@@ -311,7 +311,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @param req - The JSON-RPC request.
    * @returns The JSON-RPC response.
    */
-  private _promiseHandle(
+  private async _promiseHandle(
     req: JsonRpcRequest | JsonRpcNotification,
   ): Promise<JsonRpcResponse<Json> | void> {
     return new Promise((resolve, reject) => {
@@ -501,7 +501,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * @returns An array of any error encountered during middleware exection,
    * and a boolean indicating whether the request should end.
    */
-  private static _runMiddleware(
+  private static async _runMiddleware(
     req: JsonRpcRequest,
     res: PendingJsonRpcResponse<Json>,
     middleware: JsonRpcMiddleware<JsonRpcParams, Json>,

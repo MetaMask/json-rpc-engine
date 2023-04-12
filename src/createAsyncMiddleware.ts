@@ -4,6 +4,7 @@ import {
   JsonRpcRequest,
   PendingJsonRpcResponse,
 } from '@metamask/utils';
+
 import { JsonRpcMiddleware } from './JsonRpcEngine';
 
 export type AsyncJsonRpcEngineNextCallback = () => Promise<void>;
@@ -46,6 +47,7 @@ export function createAsyncMiddleware<
 >(
   asyncMiddleware: AsyncJsonrpcMiddleware<Params, Result>,
 ): JsonRpcMiddleware<Params, Result> {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async (req, res, next, end) => {
     // nextPromise is the key to the implementation
     // it is resolved by the return handler passed to the

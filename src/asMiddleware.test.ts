@@ -3,6 +3,7 @@ import {
   isJsonRpcSuccess,
   JsonRpcRequest,
 } from '@metamask/utils';
+
 import { JsonRpcEngine } from '.';
 
 const jsonrpc = '2.0' as const;
@@ -30,7 +31,7 @@ describe('asMiddleware', () => {
         expect(originalReq.id).toStrictEqual(res.id);
         expect(originalReq.jsonrpc).toStrictEqual(res.jsonrpc);
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual('saw subengine');
+        expect(res.result).toBe('saw subengine');
         resolve();
       });
     });
@@ -198,7 +199,7 @@ describe('asMiddleware', () => {
     await new Promise<void>((resolve) => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeDefined();
-        expect((err as any).message).toStrictEqual('foo');
+        expect((err as any).message).toBe('foo');
         expect(isJsonRpcSuccess(res)).toBe(false);
         resolve();
       });
@@ -225,7 +226,7 @@ describe('asMiddleware', () => {
     await new Promise<void>((resolve) => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeDefined();
-        expect((err as any).message).toStrictEqual('foo');
+        expect((err as any).message).toBe('foo');
         expect(isJsonRpcSuccess(res)).toBe(false);
         resolve();
       });
@@ -253,7 +254,7 @@ describe('asMiddleware', () => {
     await new Promise<void>((resolve) => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeDefined();
-        expect((err as any).message).toStrictEqual('foo');
+        expect((err as any).message).toBe('foo');
         expect(isJsonRpcSuccess(res)).toBe(false);
         resolve();
       });

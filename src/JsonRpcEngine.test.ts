@@ -7,6 +7,7 @@ import {
   Json,
 } from '@metamask/utils';
 import { ethErrors } from 'eth-rpc-errors';
+
 import { JsonRpcEngine, JsonRpcMiddleware } from '.';
 
 const jsonrpc = '2.0' as const;
@@ -22,11 +23,11 @@ describe('JsonRpcEngine', () => {
   it('handle: returns error for invalid request value', async () => {
     const engine = new JsonRpcEngine();
     let response: any = await engine.handle(null as any);
-    expect(response.error.code).toStrictEqual(-32600);
+    expect(response.error.code).toBe(-32600);
     expect(response.result).toBeUndefined();
 
     response = await engine.handle(true as any);
-    expect(response.error.code).toStrictEqual(-32600);
+    expect(response.error.code).toBe(-32600);
     expect(response.result).toBeUndefined();
   });
 
@@ -34,7 +35,7 @@ describe('JsonRpcEngine', () => {
     const engine = new JsonRpcEngine();
     const response: any = await engine.handle({ id: 1, method: null } as any);
 
-    expect(response.error.code).toStrictEqual(-32600);
+    expect(response.error.code).toBe(-32600);
     expect(response.result).toBeUndefined();
   });
 
@@ -45,7 +46,7 @@ describe('JsonRpcEngine', () => {
       method: null,
     } as any);
 
-    expect(response.error.code).toStrictEqual(-32600);
+    expect(response.error.code).toBe(-32600);
     expect(response.result).toBeUndefined();
   });
 
@@ -144,7 +145,7 @@ describe('JsonRpcEngine', () => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeNull();
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
+        expect(res.result).toBe(42);
         resolve();
       });
     });
@@ -165,8 +166,8 @@ describe('JsonRpcEngine', () => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeNull();
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
-        expect(payload.method).toStrictEqual('hello');
+        expect(res.result).toBe(42);
+        expect(payload.method).toBe('hello');
         resolve();
       });
     });
@@ -184,7 +185,7 @@ describe('JsonRpcEngine', () => {
 
     const res = await engine.handle(payload);
     assertIsJsonRpcSuccess(res);
-    expect(res.result).toStrictEqual(42);
+    expect(res.result).toBe(42);
   });
 
   it('allow null result', async () => {
@@ -226,7 +227,7 @@ describe('JsonRpcEngine', () => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeNull();
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
+        expect(res.result).toBe(42);
         resolve();
       });
     });
@@ -250,7 +251,7 @@ describe('JsonRpcEngine', () => {
       engine.handle(payload, function (err, res) {
         expect(err).toBeNull();
         assertIsJsonRpcSuccess(res);
-        expect(res.result).toStrictEqual(42);
+        expect(res.result).toBe(42);
         resolve();
       });
     });
@@ -332,7 +333,7 @@ describe('JsonRpcEngine', () => {
         expect(err).toBeDefined();
         expect(res).toBeDefined();
         assertIsJsonRpcFailure(res);
-        expect(res.error.code).toStrictEqual(-32603);
+        expect(res.error.code).toBe(-32603);
         expect(
           res.error.message.startsWith(
             'JsonRpcEngine: "next" return handlers must be functions.',
@@ -381,12 +382,12 @@ describe('JsonRpcEngine', () => {
       engine.handle(payload, function (err, res: any) {
         expect(err).toBeNull();
         expect(res).toBeInstanceOf(Array);
-        expect(res[0].result).toStrictEqual(1);
-        expect(res[1].result).toStrictEqual(2);
-        expect(res[2].result).toStrictEqual(3);
+        expect(res[0].result).toBe(1);
+        expect(res[1].result).toBe(2);
+        expect(res[2].result).toBe(3);
         expect(isJsonRpcSuccess(res[3])).toBe(false);
-        expect(res[3].error.code).toStrictEqual(-32603);
-        expect(res[4].result).toStrictEqual(5);
+        expect(res[3].error.code).toBe(-32603);
+        expect(res[4].result).toBe(5);
         resolve();
       });
     });
@@ -414,12 +415,12 @@ describe('JsonRpcEngine', () => {
 
     const res: any = await engine.handle(payload);
     expect(res).toBeInstanceOf(Array);
-    expect(res[0].result).toStrictEqual(1);
-    expect(res[1].result).toStrictEqual(2);
-    expect(res[2].result).toStrictEqual(3);
+    expect(res[0].result).toBe(1);
+    expect(res[1].result).toBe(2);
+    expect(res[2].result).toBe(3);
     expect(isJsonRpcSuccess(res[3])).toBe(false);
-    expect(res[3].error.code).toStrictEqual(-32603);
-    expect(res[4].result).toStrictEqual(5);
+    expect(res[3].error.code).toBe(-32603);
+    expect(res[4].result).toBe(5);
   });
 
   it('handle: batch payload with bad request object', async () => {
@@ -437,10 +438,10 @@ describe('JsonRpcEngine', () => {
 
     const res: any = await engine.handle(payload as any);
     expect(res).toBeInstanceOf(Array);
-    expect(res[0].result).toStrictEqual(1);
+    expect(res[0].result).toBe(1);
     expect(isJsonRpcSuccess(res[1])).toBe(false);
-    expect(res[1].error.code).toStrictEqual(-32600);
-    expect(res[2].result).toStrictEqual(3);
+    expect(res[1].error.code).toBe(-32600);
+    expect(res[2].result).toBe(3);
   });
 
   it('basic notifications', async () => {
@@ -448,7 +449,7 @@ describe('JsonRpcEngine', () => {
 
     await new Promise<void>((resolve) => {
       engine.once('notification', (notif) => {
-        expect(notif.method).toStrictEqual('test_notif');
+        expect(notif.method).toBe('test_notif');
         resolve();
       });
       engine.emit('notification', { jsonrpc, method: 'test_notif' });
@@ -514,11 +515,11 @@ describe('JsonRpcEngine', () => {
     await new Promise<void>((resolve) => {
       engine.handle(payload, function (err, _res) {
         expect(err).toBeNull();
-        expect(events[0]).toStrictEqual('1-next');
-        expect(events[1]).toStrictEqual('2-next');
-        expect(events[2]).toStrictEqual('3-end');
-        expect(events[3]).toStrictEqual('2-return');
-        expect(events[4]).toStrictEqual('1-return');
+        expect(events[0]).toBe('1-next');
+        expect(events[1]).toBe('2-next');
+        expect(events[2]).toBe('3-end');
+        expect(events[3]).toBe('2-return');
+        expect(events[4]).toBe('1-return');
         resolve();
       });
     });
@@ -570,7 +571,7 @@ describe('JsonRpcEngine', () => {
     await new Promise<void>((resolve) => {
       engine.handle(payload, (err: any, _res) => {
         expect(err).toBeDefined();
-        expect(err.message).toStrictEqual('foo');
+        expect(err.message).toBe('foo');
         resolve();
       });
     });
@@ -605,7 +606,7 @@ describe('JsonRpcEngine', () => {
 
     await new Promise<void>((resolve) => {
       engine.handle([{}] as any, (err: any) => {
-        expect(err.message).toStrictEqual('foo');
+        expect(err.message).toBe('foo');
         resolve();
       });
     });
@@ -629,7 +630,7 @@ describe('JsonRpcEngine', () => {
       const engine = new JsonRpcEngine();
       engine.destroy();
 
-      expect(() => engine.handle([])).toThrow(destroyedError);
+      expect(async () => engine.handle([])).toThrow(destroyedError);
       expect(() => engine.asMiddleware()).toThrow(destroyedError);
       expect(() => engine.push(() => undefined)).toThrow(destroyedError);
     });
