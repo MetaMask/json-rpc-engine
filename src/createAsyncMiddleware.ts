@@ -13,8 +13,8 @@ export type AsyncJsonrpcMiddleware<
   Params extends JsonRpcParams,
   Result extends Json,
 > = (
-  req: JsonRpcRequest<Params>,
-  res: PendingJsonRpcResponse<Result>,
+  request: JsonRpcRequest<Params>,
+  response: PendingJsonRpcResponse<Result>,
   next: AsyncJsonRpcEngineNextCallback,
 ) => Promise<void>;
 
@@ -48,7 +48,7 @@ export function createAsyncMiddleware<
   asyncMiddleware: AsyncJsonrpcMiddleware<Params, Result>,
 ): JsonRpcMiddleware<Params, Result> {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  return async (req, res, next, end) => {
+  return async (request, response, next, end) => {
     // nextPromise is the key to the implementation
     // it is resolved by the return handler passed to the
     // "next" function
@@ -76,7 +76,7 @@ export function createAsyncMiddleware<
     };
 
     try {
-      await asyncMiddleware(req, res, asyncNext);
+      await asyncMiddleware(request, response, asyncNext);
 
       if (nextWasCalled) {
         await nextPromise; // we must wait until the return handler is called

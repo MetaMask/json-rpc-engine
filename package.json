@@ -67,6 +67,7 @@
     "typedoc": "^0.24.1",
     "typescript": "~4.8.4"
   },
+  "packageManager": "yarn@3.5.0",
   "engines": {
     "node": ">=16.0.0"
   },
@@ -78,6 +79,5 @@
     "allowScripts": {
       "@lavamoat/preinstall-always-fail": false
     }
-  },
-  "packageManager": "yarn@3.5.0"
+  }
 }

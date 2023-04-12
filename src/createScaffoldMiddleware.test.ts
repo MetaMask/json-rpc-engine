@@ -17,19 +17,19 @@ describe('createScaffoldMiddleware', () => {
       string | JsonRpcMiddleware<JsonRpcParams, Json>
     > = {
       method1: 'foo',
-      method2: (_req, res, _next, end) => {
-        res.result = 42;
+      method2: (_request, response, _next, end) => {
+        response.result = 42;
         end();
       },
-      method3: (_req, res, _next, end) => {
-        res.error = ethErrors.rpc.internal({ message: 'method3' });
+      method3: (_request, response, _next, end) => {
+        response.error = ethErrors.rpc.internal({ message: 'method3' });
         end();
       },
     };
 
     engine.push(createScaffoldMiddleware(scaffold));
-    engine.push((_req, res, _next, end) => {
-      res.result = 'passthrough';
+    engine.push((_request, response, _next, end) => {
+      response.result = 'passthrough';
       end();
     });
 
