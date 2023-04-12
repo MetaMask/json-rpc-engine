@@ -1,9 +1,12 @@
-import { JsonRpcRequest } from '@metamask/utils';
+import { Json, JsonRpcParams, JsonRpcRequest } from '@metamask/utils';
 import { JsonRpcMiddleware, PendingJsonRpcResponse } from './JsonRpcEngine';
 
 export type AsyncJsonRpcEngineNextCallback = () => Promise<void>;
 
-export type AsyncJsonrpcMiddleware<Params, Result> = (
+export type AsyncJsonrpcMiddleware<
+  Params extends JsonRpcParams,
+  Result extends Json,
+> = (
   req: JsonRpcRequest<Params>,
   res: PendingJsonRpcResponse<Result>,
   next: AsyncJsonRpcEngineNextCallback,
@@ -32,7 +35,10 @@ type ReturnHandlerCallback = (error: null | Error) => void;
  * @returns The wrapped asynchronous middleware function, ready to be consumed
  * by JsonRpcEngine.
  */
-export function createAsyncMiddleware<Params, Result>(
+export function createAsyncMiddleware<
+  Params extends JsonRpcParams,
+  Result extends Json,
+>(
   asyncMiddleware: AsyncJsonrpcMiddleware<Params, Result>,
 ): JsonRpcMiddleware<Params, Result> {
   return async (req, res, next, end) => {
@@ -71,7 +77,7 @@ export function createAsyncMiddleware<Params, Result>(
       } else {
         end(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       if (returnHandlerCallback) {
         (returnHandlerCallback as ReturnHandlerCallback)(error);
       } else {
