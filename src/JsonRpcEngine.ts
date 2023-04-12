@@ -1,7 +1,7 @@
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import {
   hasProperty,
-  JsonRpcError,
+  JsonRpcError as SerializedJsonRpcError,
   JsonRpcRequest,
   JsonRpcResponse,
   JsonRpcNotification,
@@ -10,9 +10,9 @@ import {
   JsonRpcParams,
   PendingJsonRpcResponse,
 } from '@metamask/utils';
-import { errorCodes, EthereumRpcError, serializeError } from 'eth-rpc-errors';
+import { errorCodes, JsonRpcError, serializeError } from '@metamask/rpc-errors';
 
-export type JsonRpcEngineCallbackError = Error | JsonRpcError | null;
+export type JsonRpcEngineCallbackError = Error | SerializedJsonRpcError | null;
 
 export type JsonRpcEngineReturnHandler = (
   done: (error?: JsonRpcEngineCallbackError) => void,
@@ -357,7 +357,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       Array.isArray(callerReq) ||
       typeof callerReq !== 'object'
     ) {
-      const error = new EthereumRpcError(
+      const error = new JsonRpcError(
         errorCodes.rpc.invalidRequest,
         `Requests must be plain objects. Received: ${typeof callerReq}`,
         { request: callerReq },
@@ -366,7 +366,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     }
 
     if (typeof callerReq.method !== 'string') {
-      const error = new EthereumRpcError(
+      const error = new JsonRpcError(
         errorCodes.rpc.invalidRequest,
         `Must specify a string method. Received: ${typeof callerReq.method}`,
         { request: callerReq as Json },
@@ -420,7 +420,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       // Ensure no result is present on an errored response
       delete res.result;
       if (!res.error) {
-        res.error = serializeError(error) as JsonRpcError;
+        res.error = serializeError(error) as SerializedJsonRpcError;
       }
     }
 
@@ -521,7 +521,9 @@ export class JsonRpcEngine extends SafeEventEmitter {
       const end: JsonRpcEngineEndCallback = (error?: unknown) => {
         const parsedError = error || response.error;
         if (parsedError) {
-          response.error = serializeError(parsedError) as JsonRpcError;
+          response.error = serializeError(
+            parsedError,
+          ) as SerializedJsonRpcError;
         }
         // True indicates that the request should end
         resolve([parsedError, true]);
@@ -536,7 +538,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
           if (returnHandler) {
             if (typeof returnHandler !== 'function') {
               end(
-                new EthereumRpcError(
+                new JsonRpcError(
                   errorCodes.rpc.internal,
                   `JsonRpcEngine: "next" return handlers must be functions. ` +
                     `Received "${typeof returnHandler}" for request:\n${jsonify(
@@ -593,7 +595,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     isComplete: boolean,
   ): void {
     if (!hasProperty(res, 'result') && !hasProperty(res, 'error')) {
-      throw new EthereumRpcError(
+      throw new JsonRpcError(
         errorCodes.rpc.internal,
         `JsonRpcEngine: Response has no error or result for request:\n${jsonify(
           req,
@@ -603,7 +605,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
     }
 
     if (!isComplete) {
-      throw new EthereumRpcError(
+      throw new JsonRpcError(
         errorCodes.rpc.internal,
         `JsonRpcEngine: Nothing ended request:\n${jsonify(req)}`,
         { request: req },

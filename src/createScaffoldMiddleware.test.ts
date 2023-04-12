@@ -4,8 +4,7 @@ import {
   JsonRpcParams,
   Json,
 } from '@metamask/utils';
-import { ethErrors } from 'eth-rpc-errors';
-
+import { rpcErrors } from '@metamask/rpc-errors';
 import { JsonRpcEngine, createScaffoldMiddleware, JsonRpcMiddleware } from '.';
 
 describe('createScaffoldMiddleware', () => {
@@ -22,7 +21,7 @@ describe('createScaffoldMiddleware', () => {
         end();
       },
       method3: (_request, response, _next, end) => {
-        response.error = ethErrors.rpc.internal({ message: 'method3' });
+        response.error = rpcErrors.internal({ message: 'method3' });
         end();
       },
     };
