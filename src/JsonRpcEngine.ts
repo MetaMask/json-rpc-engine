@@ -582,31 +582,31 @@ export class JsonRpcEngine extends SafeEventEmitter {
    * Throws an error if the response has neither a result nor an error, or if
    * the "isComplete" flag is falsy.
    *
-   * @param req - The request object.
-   * @param res - The response object.
+   * @param request - The request object.
+   * @param response - The response object.
    * @param isComplete - Boolean from {@link JsonRpcEngine.#runAllMiddleware}
    * indicating whether a middleware ended the request.
    */
   static #checkForCompletion(
-    req: JsonRpcRequest,
-    res: PendingJsonRpcResponse<Json>,
+    request: JsonRpcRequest,
+    response: PendingJsonRpcResponse<Json>,
     isComplete: boolean,
   ): void {
-    if (!hasProperty(res, 'result') && !hasProperty(res, 'error')) {
+    if (!hasProperty(response, 'result') && !hasProperty(response, 'error')) {
       throw new JsonRpcError(
         errorCodes.rpc.internal,
         `JsonRpcEngine: Response has no error or result for request:\n${jsonify(
-          req,
+          request,
         )}`,
-        { request: req as Json },
+        { request: request as Json },
       );
     }
 
     if (!isComplete) {
       throw new JsonRpcError(
         errorCodes.rpc.internal,
-        `JsonRpcEngine: Nothing ended request:\n${jsonify(req)}`,
-        { request: req as Json },
+        `JsonRpcEngine: Nothing ended request:\n${jsonify(request)}`,
+        { request: request as Json },
       );
     }
   }
