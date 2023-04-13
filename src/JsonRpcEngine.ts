@@ -544,7 +544,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
                     `Received "${typeof returnHandler}" for request:\n${jsonify(
                       request,
                     )}`,
-                  { request },
+                  { request: request as Json },
                 ),
               );
             }
@@ -600,7 +600,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
         `JsonRpcEngine: Response has no error or result for request:\n${jsonify(
           req,
         )}`,
-        { request: req },
+        { request: req as Json },
       );
     }
 
@@ -608,7 +608,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       throw new JsonRpcError(
         errorCodes.rpc.internal,
         `JsonRpcEngine: Nothing ended request:\n${jsonify(req)}`,
-        { request: req },
+        { request: req as Json },
       );
     }
   }
