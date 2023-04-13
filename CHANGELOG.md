@@ -7,22 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [7.0.0]
-### Changed
-- **BREAKING:** Bump minimum Node version to 16 ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
-- **BREAKING:** Use `@metamask/utils` ([#105](https://github.com/MetaMask/json-rpc-engine/pull/105))
-  - This package now uses `@metamask/utils` JSON-RPC types
-- Change package name to `@metamask/json-rpc-engine` ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
-- Use `@metamask/rpc-errors` ([#138](https://github.com/MetaMask/json-rpc-engine/pull/138))
-
 ### Added
 - Added JSON-RPC notification handling ([#104](https://github.com/MetaMask/json-rpc-engine/pull/104))
 - Added `destroy` method ([#106](https://github.com/MetaMask/json-rpc-engine/pull/106))
-- Added `isJsonRpcSuccess` and `isJsonRpcFailure` type guard utilities ([#91](https://github.com/MetaMask/json-rpc-engine/pull/91))
-- Added JSON-RPC ID validation utility and type guard, via `getJsonRpcIdValidator` ([#91](https://github.com/MetaMask/json-rpc-engine/pull/91))
 
 ### Changed
+- **BREAKING:** Require  minimum Node version to 16 ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
+- **BREAKING:** Use `@metamask/utils` ([#105](https://github.com/MetaMask/json-rpc-engine/pull/105))
+  - This package now uses `@metamask/utils` JSON-RPC types
 - **(BREAKING)** Return a `null` instead of `undefined` response `id` for malformed request objects ([#91](https://github.com/MetaMask/json-rpc-engine/pull/91))
   - This is very unlikely to be breaking in practice, but the behavior could have been relied on.
+- Change package name to `@metamask/json-rpc-engine` ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
+- Use `@metamask/rpc-errors` ([#138](https://github.com/MetaMask/json-rpc-engine/pull/138))
 
 ## [6.1.0] - 2020-11-20
 ### Added
