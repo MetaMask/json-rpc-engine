@@ -1,3 +1,4 @@
+import { errorCodes, JsonRpcError, serializeError } from '@metamask/rpc-errors';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import {
   hasProperty,
@@ -10,7 +11,6 @@ import {
   JsonRpcParams,
   PendingJsonRpcResponse,
 } from '@metamask/utils';
-import { errorCodes, JsonRpcError, serializeError } from '@metamask/rpc-errors';
 
 export type JsonRpcEngineCallbackError = Error | SerializedJsonRpcError | null;
 
@@ -420,7 +420,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       // Ensure no result is present on an errored response
       delete res.result;
       if (!res.error) {
-        res.error = serializeError(error) as SerializedJsonRpcError;
+        res.error = serializeError(error);
       }
     }
 
@@ -521,9 +521,7 @@ export class JsonRpcEngine extends SafeEventEmitter {
       const end: JsonRpcEngineEndCallback = (error?: unknown) => {
         const parsedError = error || response.error;
         if (parsedError) {
-          response.error = serializeError(
-            parsedError,
-          ) as SerializedJsonRpcError;
+          response.error = serializeError(parsedError);
         }
         // True indicates that the request should end
         resolve([parsedError, true]);
