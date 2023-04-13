@@ -7,33 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [7.0.0]
-### Uncategorized
-- Update README ([#140](https://github.com/MetaMask/json-rpc-engine/pull/140))
+### Changed
+- **BREAKING:** Bump minimum Node version to 16 ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
+- **BREAKING:** Use `@metamask/utils` ([#105](https://github.com/MetaMask/json-rpc-engine/pull/105))
+  - This package now uses `@metamask/utils` JSON-RPC types
+- Change package name to `@metamask/json-rpc-engine` ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
 - Use `@metamask/rpc-errors` ([#138](https://github.com/MetaMask/json-rpc-engine/pull/138))
-- BREAKING: Update dependencies, fix code style, and standardise workflows ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
-- Bump @metamask/utils from 2.1.0 to 5.0.1 ([#136](https://github.com/MetaMask/json-rpc-engine/pull/136))
-- Bump json5 from 1.0.1 to 1.0.2 ([#129](https://github.com/MetaMask/json-rpc-engine/pull/129))
-- Bump minimatch from 3.0.4 to 3.1.2 ([#126](https://github.com/MetaMask/json-rpc-engine/pull/126))
-- Bump @metamask/auto-changelog from 3.0.0 to 3.1.0 ([#125](https://github.com/MetaMask/json-rpc-engine/pull/125))
-- Bump @metamask/auto-changelog from 2.6.1 to 3.0.0 ([#122](https://github.com/MetaMask/json-rpc-engine/pull/122))
-- Handle JSON-RPC notifications ([#104](https://github.com/MetaMask/json-rpc-engine/pull/104))
-- Bump @metamask/utils from 2.0.0 to 2.1.0 ([#113](https://github.com/MetaMask/json-rpc-engine/pull/113))
-- Bump @metamask/auto-changelog from 2.5.0 to 2.6.1 ([#111](https://github.com/MetaMask/json-rpc-engine/pull/111))
-- Rename engine test file ([#108](https://github.com/MetaMask/json-rpc-engine/pull/108))
-- Add `destroy` method ([#106](https://github.com/MetaMask/json-rpc-engine/pull/106))
-- BREAKING: Use @metamask/utils ([#105](https://github.com/MetaMask/json-rpc-engine/pull/105))
-- Migrate to Jest ([#102](https://github.com/MetaMask/json-rpc-engine/pull/102))
-- Improve module template compliance ([#100](https://github.com/MetaMask/json-rpc-engine/pull/100))
-- Bump ajv from 6.10.2 to 6.12.6 ([#101](https://github.com/MetaMask/json-rpc-engine/pull/101))
-- Bump minimist from 1.2.5 to 1.2.6 ([#99](https://github.com/MetaMask/json-rpc-engine/pull/99))
-- Bump path-parse from 1.0.6 to 1.0.7 ([#95](https://github.com/MetaMask/json-rpc-engine/pull/95))
-- Bump glob-parent from 5.0.0 to 5.1.2 ([#93](https://github.com/MetaMask/json-rpc-engine/pull/93))
-- Update ESLint and TypeScript dependencies and config ([#90](https://github.com/MetaMask/json-rpc-engine/pull/90))
-- Bump hosted-git-info from 2.8.7 to 2.8.9 ([#88](https://github.com/MetaMask/json-rpc-engine/pull/88))
-- Bump lodash from 4.17.19 to 4.17.21 ([#87](https://github.com/MetaMask/json-rpc-engine/pull/87))
-- Repo standardization ([#86](https://github.com/MetaMask/json-rpc-engine/pull/86))
-- Bump y18n from 4.0.0 to 4.0.1 ([#85](https://github.com/MetaMask/json-rpc-engine/pull/85))
-- resolve() function argument was missing in Promise definition ([#79](https://github.com/MetaMask/json-rpc-engine/pull/79))
+
+### Added
+- Added JSON-RPC notification handling ([#104](https://github.com/MetaMask/json-rpc-engine/pull/104))
+- Added `destroy` method ([#106](https://github.com/MetaMask/json-rpc-engine/pull/106))
 
 ### Added
 - `isJsonRpcSuccess` and `isJsonRpcFailure` type guard utilities ([#91](https://github.com/MetaMask/json-rpc-engine/pull/91))
