@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `destroy` method ([#106](https://github.com/MetaMask/json-rpc-engine/pull/106))
 
 ### Changed
-- **BREAKING:** Require  minimum Node version to 16 ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
+- **BREAKING:** Require a minimum Node version of 16 ([#139](https://github.com/MetaMask/json-rpc-engine/pull/139))
 - **BREAKING:** Use `@metamask/utils` ([#105](https://github.com/MetaMask/json-rpc-engine/pull/105))
   - This package now uses `@metamask/utils` JSON-RPC types
 - **(BREAKING)** Return a `null` instead of `undefined` response `id` for malformed request objects ([#91](https://github.com/MetaMask/json-rpc-engine/pull/91))
