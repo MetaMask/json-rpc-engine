@@ -1,6 +1,8 @@
 import {
   isJsonRpcRequest,
+  Json,
   JsonRpcNotification,
+  JsonRpcParams,
   JsonRpcRequest,
   JsonRpcResponse,
 } from '@metamask/utils';
@@ -12,13 +14,13 @@ import {
 } from './JsonRpcEngine';
 
 type HandleArgument =
-  | JsonRpcRequest<unknown>
-  | JsonRpcNotification<unknown>
-  | (JsonRpcRequest<unknown> | JsonRpcNotification<unknown>)[];
+  | JsonRpcRequest
+  | JsonRpcNotification
+  | (JsonRpcRequest | JsonRpcNotification)[];
 
 type DuplexJsonRpcEngineArgs = {
-  receiverNotificationHandler: JsonRpcNotificationHandler<unknown>;
-  senderNotificationHandler: JsonRpcNotificationHandler<unknown>;
+  receiverNotificationHandler: JsonRpcNotificationHandler<JsonRpcParams>;
+  senderNotificationHandler: JsonRpcNotificationHandler<JsonRpcParams>;
 };
 
 export class DuplexJsonRpcEngine {
@@ -52,7 +54,9 @@ export class DuplexJsonRpcEngine {
    *
    * @param middleware - The middleware function to add.
    */
-  addReceiverMiddleware(middleware: JsonRpcMiddleware<unknown, unknown>): void {
+  addReceiverMiddleware(
+    middleware: JsonRpcMiddleware<JsonRpcParams, Json>,
+  ): void {
     this.#receiver.addMiddleware(middleware);
   }
 
@@ -61,7 +65,9 @@ export class DuplexJsonRpcEngine {
    *
    * @param middleware - The middleware function to add.
    */
-  addSenderMiddleware(middleware: JsonRpcMiddleware<unknown, unknown>): void {
+  addSenderMiddleware(
+    middleware: JsonRpcMiddleware<JsonRpcParams, Json>,
+  ): void {
     this.#sender.addMiddleware(middleware);
   }
 
@@ -71,7 +77,7 @@ export class DuplexJsonRpcEngine {
    *
    * @returns The receiving pipeline as a middleware function.
    */
-  receiverAsMiddleware(): JsonRpcMiddleware<unknown, unknown> {
+  receiverAsMiddleware(): JsonRpcMiddleware<JsonRpcParams, Json> {
     return this.#receiver.asMiddleware();
   }
 
@@ -81,7 +87,7 @@ export class DuplexJsonRpcEngine {
    *
    * @returns The sending pipeline as a middleware function.
    */
-  senderAsMiddleware(): JsonRpcMiddleware<unknown, unknown> {
+  senderAsMiddleware(): JsonRpcMiddleware<JsonRpcParams, Json> {
     return this.#sender.asMiddleware();
   }
 
@@ -91,7 +97,7 @@ export class DuplexJsonRpcEngine {
    * @param request - The JSON-RPC request to receive.
    * @returns The JSON-RPC response.
    */
-  receive<Params, Result>(
+  receive<Params extends JsonRpcParams, Result extends Json>(
     request: JsonRpcRequest<Params>,
   ): Promise<JsonRpcResponse<Result>>;
 
@@ -100,7 +106,9 @@ export class DuplexJsonRpcEngine {
    *
    * @param notification - The notification to receive.
    */
-  receive<Params>(notification: JsonRpcNotification<Params>): Promise<void>;
+  receive<Params extends JsonRpcParams>(
+    notification: JsonRpcNotification<Params>,
+  ): Promise<void>;
 
   /**
    * Receive an array of JSON-RPC requests and/or notifications, and return an
@@ -109,7 +117,7 @@ export class DuplexJsonRpcEngine {
    * @param request - The JSON-RPC requests to receive.
    * @returns An array of JSON-RPC responses.
    */
-  receive<Params, Result>(
+  receive<Params extends JsonRpcParams, Result extends Json>(
     requests: (JsonRpcRequest<Params> | JsonRpcNotification<Params>)[],
   ): Promise<JsonRpcResponse<Result>[]>;
 
@@ -128,7 +136,7 @@ export class DuplexJsonRpcEngine {
    * @param request - The JSON-RPC request to send.
    * @returns The JSON-RPC response.
    */
-  send<Params, Result>(
+  send<Params extends JsonRpcParams, Result extends Json>(
     request: JsonRpcRequest<Params>,
   ): Promise<JsonRpcResponse<Result>>;
 
@@ -137,7 +145,9 @@ export class DuplexJsonRpcEngine {
    *
    * @param notification - The notification to send.
    */
-  send<Params>(notification: JsonRpcNotification<Params>): Promise<void>;
+  send<Params extends JsonRpcParams>(
+    notification: JsonRpcNotification<Params>,
+  ): Promise<void>;
 
   /**
    * Send an array of JSON-RPC requests and/or notifications, and receive an
@@ -146,7 +156,7 @@ export class DuplexJsonRpcEngine {
    * @param request - The JSON-RPC requests to send.
    * @returns An array of JSON-RPC responses.
    */
-  send<Params, Result>(
+  send<Params extends JsonRpcParams, Result extends Json>(
     requests: (JsonRpcRequest<Params> | JsonRpcNotification<Params>)[],
   ): Promise<JsonRpcResponse<Result>[]>;
 
