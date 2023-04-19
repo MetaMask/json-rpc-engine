@@ -4,6 +4,7 @@ import {
   JsonRpcRequest,
   JsonRpcResponse,
 } from '@metamask/utils';
+
 import {
   JsonRpcEngine,
   JsonRpcMiddleware,
@@ -15,10 +16,10 @@ type HandleArgument =
   | JsonRpcNotification<unknown>
   | (JsonRpcRequest<unknown> | JsonRpcNotification<unknown>)[];
 
-interface DuplexJsonRpcEngineArgs {
+type DuplexJsonRpcEngineArgs = {
   receiverNotificationHandler: JsonRpcNotificationHandler<unknown>;
   senderNotificationHandler: JsonRpcNotificationHandler<unknown>;
-}
+};
 
 export class DuplexJsonRpcEngine {
   readonly #receiver: JsonRpcEngine;
@@ -51,10 +52,8 @@ export class DuplexJsonRpcEngine {
    *
    * @param middleware - The middleware function to add.
    */
-  addReceiverMiddleware(
-    middleware: JsonRpcMiddleware<unknown, unknown>,
-  ): void {
-    this.#receiver.addMiddleware(middleware as JsonRpcMiddleware<unknown, unknown>);
+  addReceiverMiddleware(middleware: JsonRpcMiddleware<unknown, unknown>): void {
+    this.#receiver.addMiddleware(middleware);
   }
 
   /**
@@ -63,7 +62,7 @@ export class DuplexJsonRpcEngine {
    * @param middleware - The middleware function to add.
    */
   addSenderMiddleware(middleware: JsonRpcMiddleware<unknown, unknown>): void {
-    this.#sender.addMiddleware(middleware as JsonRpcMiddleware<unknown, unknown>);
+    this.#sender.addMiddleware(middleware);
   }
 
   /**
