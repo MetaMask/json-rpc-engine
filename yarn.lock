@@ -1310,12 +1310,12 @@ __metadata:
   linkType: soft
 
 "@metamask/rpc-errors@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@metamask/rpc-errors@npm:5.0.0"
+  version: 5.1.0
+  resolution: "@metamask/rpc-errors@npm:5.1.0"
   dependencies:
     "@metamask/utils": ^5.0.0
     fast-safe-stringify: ^2.0.6
-  checksum: fbcb21ad1460883ee9d28f487d9cf5de7d3c6ac819024a1b6e5732d5da9a9f275f19fa0b4daa06dbd9b45d89c9e50ab9f281d597324e36d3324fbc9ebfdf0ba8
+  checksum: 69c3ca7a0502889b10f32a88fc22a34908d848110790d3a509484b4ce018b1079adf8448a387d044f5bb3a1d154ee60dad2cefc6721d17591a2fefba47ac2416
   languageName: node
   linkType: hard
 
