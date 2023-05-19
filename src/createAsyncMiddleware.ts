@@ -63,18 +63,8 @@ export function createAsyncMiddleware<
     let nextWasCalled = false;
     let endWasCalled = false;
 
-    // The control flow gets pretty messy in here, and we have to guard against
-    // accidentally ending the request multiple times.
-    // If this function weren't deprecated we probably wouldn't tolerate this.
-    const innerEnd = (error: null | Error) => {
-      if (!endWasCalled) {
-        end(error);
-      }
-      endWasCalled = true;
-    };
-
     // This will be called by the consumer's async middleware.
-    const asyncNext = async () => {
+    const innerNext = async () => {
       nextWasCalled = true;
 
       // We pass a return handler to next(). When it is called by the engine,
@@ -88,11 +78,21 @@ export function createAsyncMiddleware<
       await nextPromise;
     };
 
+    // The control flow gets pretty messy in here, and we have to guard against
+    // accidentally ending the request multiple times.
+    // If this function weren't deprecated we probably wouldn't tolerate this.
+    const innerEnd = (error: null | Error) => {
+      if (!endWasCalled) {
+        end(error);
+      }
+      endWasCalled = true;
+    };
+
     // We have to await the async middleware in order to process the return handler
     // and allow the engine to complete request handling.
     (async () => {
       try {
-        await asyncMiddleware(request, response, asyncNext);
+        await asyncMiddleware(request, response, innerNext);
 
         if (nextWasCalled) {
           await nextPromise; // we must wait until the return handler is called
