@@ -19,7 +19,7 @@ type ScaffoldMiddlewareHandler<
 export function createScaffoldMiddleware(handlers: {
   [methodName: string]: ScaffoldMiddlewareHandler<JsonRpcParams, Json>;
 }): JsonRpcMiddleware<JsonRpcParams, Json> {
-  return async (req, res, next, end) => {
+  return (req, res, next, end) => {
     const handler = handlers[req.method];
     // if no handler, return
     if (handler === undefined) {
