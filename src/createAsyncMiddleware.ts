@@ -21,22 +21,24 @@ export type AsyncJsonrpcMiddleware<
 type ReturnHandlerCallback = (error: null | Error) => void;
 
 /**
- * JsonRpcEngine only accepts callback-based middleware directly.
- * createAsyncMiddleware exists to enable consumers to pass in async middleware
- * functions.
+ * Originally, JsonRpcEngine could only accept synchronous middleware functions.
+ * `createAsyncMiddleware` was created to enable consumers to pass in async
+ * middleware functions.
  *
- * Async middleware have no "end" function. Instead, they "end" if they return
- * without calling "next". Rather than passing in explicit return handlers,
- * async middleware can simply await "next", and perform operations on the
- * response object when execution resumes.
+ * These async middleware have no `end` function. Instead, they `end` if they
+ * return without calling `next`. Rather than passing in explicit return
+ * handlers, async middleware can simply await `next`, and perform operations
+ * on the response object when execution resumes.
  *
- * To accomplish this, createAsyncMiddleware passes the async middleware a
- * wrapped "next" function. That function calls the internal JsonRpcEngine
- * "next" function with a return handler that resolves a promise when called.
+ * To accomplish this, `createAsyncMiddleware` passes the async middleware a
+ * wrapped `next` function. That function calls the internal `JsonRpcEngine`
+ * `next` function with a return handler that resolves a promise when called.
  *
  * The return handler will always be called. Its resolution of the promise
  * enables the control flow described above.
  *
+ * @deprecated As of version 7.1.0, middleware functions can be asnync. This
+ * should no longer be used.
  * @param asyncMiddleware - The asynchronous middleware function to wrap.
  * @returns The wrapped asynchronous middleware function, ready to be consumed
  * by JsonRpcEngine.
