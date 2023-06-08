@@ -369,7 +369,7 @@ describe('JsonRpcEngine', () => {
       engine.handle(emptyBatch, function (error, response: any) {
         expect(error).toBeNull();
         expect(response).toBeInstanceOf(Array);
-        expect(response.length).toBe(1);
+        expect(response).toHaveLength(1);
         expect(
           response[0].error.message.startsWith(
             'Request batch must contain plain objects. Received an empty array',
@@ -387,7 +387,7 @@ describe('JsonRpcEngine', () => {
 
     const response: any = await engine.handle(emptyBatch);
     expect(response).toBeInstanceOf(Array);
-    expect(response.length).toBe(1);
+    expect(response).toHaveLength(1);
     expect(
       response[0].error.message.startsWith(
         'Request batch must contain plain objects. Received an empty array',
