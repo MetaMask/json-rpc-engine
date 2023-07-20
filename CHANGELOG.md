@@ -7,13 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [7.1.0]
-### Uncategorized
-- Bump semver from 6.3.0 to 6.3.1 ([#154](https://github.com/MetaMask/json-rpc-engine/pull/154))
-- Handling an empty batch array in a request ([#153](https://github.com/MetaMask/json-rpc-engine/pull/153))
-- deps: @metamask/safe-event-emitter@2.0.0->3.0.0 ([#148](https://github.com/MetaMask/json-rpc-engine/pull/148))
-- deps: @metamask/utils@5.0.1->5.0.2 ([#151](https://github.com/MetaMask/json-rpc-engine/pull/151))
-- devDeps: @lavamoat/allow-scripts@2.3.0->2.3.1 ([#150](https://github.com/MetaMask/json-rpc-engine/pull/150))
-- Bump @metamask/utils from 5.0.1 to 5.0.2 ([#149](https://github.com/MetaMask/json-rpc-engine/pull/149))
+### Changed
+- Bumped `@metamask/safe-event-emitter` from `2.0.0` to `3.0.0` ([#148](https://github.com/MetaMask/json-rpc-engine/pull/148))
+
+### Fixed
+- Fixed handling of empty batch array in requests ([#153](https://github.com/MetaMask/json-rpc-engine/pull/153))
 
 ## [7.0.0]
 ### Added
