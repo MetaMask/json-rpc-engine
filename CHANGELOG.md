@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [7.1.0]
 ### Changed
-- Bumped `@metamask/safe-event-emitter` from `2.0.0` to `3.0.0` ([#148](https://github.com/MetaMask/json-rpc-engine/pull/148))
+- Bumped `@metamask/safe-event-emitter` from `^2.0.0` to `^3.0.0` ([#148](https://github.com/MetaMask/json-rpc-engine/pull/148))
+- Bumped `@metamask/utils` from `^5.0.1` to `^5.0.2` ([#151](https://github.com/MetaMask/json-rpc-engine/pull/151))
 
 ### Fixed
 - Fixed handling of empty batch array in requests ([#153](https://github.com/MetaMask/json-rpc-engine/pull/153))
