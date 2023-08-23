@@ -1,0 +1,308 @@
+diff --git a/dist/classes.d.ts b/dist/classes.d.ts
+index 46c2ef8eb999c0063594277974b29c8f239a6dcb..89b916c2c466ec4500a3c7c8f600fff28f9db2e5 100644
+--- a/dist/classes.d.ts
++++ b/dist/classes.d.ts
+@@ -1,5 +1,5 @@
+-import { JsonRpcError as SerializedJsonRpcError } from '@metamask/utils';
+-import { DataWithOptionalCause } from './utils';
++import type { JsonRpcError as SerializedJsonRpcError } from '@metamask/utils';
++import type { DataWithOptionalCause, OptionalDataWithOptionalCause } from './utils';
+ export type { SerializedJsonRpcError };
+ /**
+  * Error subclass implementing JSON RPC 2.0 errors and Ethereum RPC errors
+@@ -7,10 +7,10 @@ export type { SerializedJsonRpcError };
+  *
+  * Permits any integer error code.
+  */
+-export declare class JsonRpcError<T extends DataWithOptionalCause> extends Error {
++export declare class JsonRpcError<Data extends OptionalDataWithOptionalCause> extends Error {
+     code: number;
+-    data?: T;
+-    constructor(code: number, message: string, data?: T);
++    data?: Data;
++    constructor(code: number, message: string, data?: Data);
+     /**
+      * Get the error as JSON-serializable object.
+      *
+@@ -29,7 +29,7 @@ export declare class JsonRpcError<T extends DataWithOptionalCause> extends Error
+  * Error subclass implementing Ethereum Provider errors per EIP-1193.
+  * Permits integer error codes in the [ 1000 <= 4999 ] range.
+  */
+-export declare class EthereumProviderError<T extends DataWithOptionalCause> extends JsonRpcError<T> {
++export declare class EthereumProviderError<Data extends DataWithOptionalCause> extends JsonRpcError<Data> {
+     /**
+      * Create an Ethereum Provider JSON-RPC error.
+      *
+@@ -38,5 +38,6 @@ export declare class EthereumProviderError<T extends DataWithOptionalCause> exte
+      * @param message - The JSON-RPC error message.
+      * @param data - Optional data to include in the error.
+      */
+-    constructor(code: number, message: string, data?: T);
++    constructor(code: number, message: string, data?: Data);
+ }
++//# sourceMappingURL=classes.d.ts.map
+\ No newline at end of file
+diff --git a/dist/classes.d.ts.map b/dist/classes.d.ts.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..f36c4e8b1201050b79f5d01cfdc4147e2e1018ba
+--- /dev/null
++++ b/dist/classes.d.ts.map
+@@ -0,0 +1 @@
++{"version":3,"file":"classes.d.ts","sourceRoot":"","sources":["../../src/classes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAEV,YAAY,IAAI,sBAAsB,EACvC,MAAM,iBAAiB,CAAC;AAIzB,OAAO,KAAK,EACV,qBAAqB,EACrB,6BAA6B,EAC9B,MAAM,SAAS,CAAC;AAGjB,YAAY,EAAE,sBAAsB,EAAE,CAAC;AAEvC;;;;;GAKG;AACH,qBAAa,YAAY,CACvB,IAAI,SAAS,6BAA6B,CAC1C,SAAQ,KAAK;IACN,IAAI,EAAE,MAAM,CAAC;IAEb,IAAI,CAAC,EAAE,IAAI,CAAC;gBAEP,IAAI,EAAE,MAAM,EAAE,OAAO,EAAE,MAAM,EAAE,IAAI,CAAC,EAAE,IAAI;IAgBtD;;;;OAIG;IACH,SAAS,IAAI,sBAAsB;IAwBnC;;;;;OAKG;IACH,QAAQ,IAAI,MAAM;CAGnB;AAED;;;GAGG;AACH,qBAAa,qBAAqB,CAChC,IAAI,SAAS,qBAAqB,CAClC,SAAQ,YAAY,CAAC,IAAI,CAAC;IAC1B;;;;;;;OAOG;gBACS,IAAI,EAAE,MAAM,EAAE,OAAO,EAAE,MAAM,EAAE,IAAI,CAAC,EAAE,IAAI;CASvD"}
+\ No newline at end of file
+diff --git a/dist/error-constants.d.ts b/dist/error-constants.d.ts
+index 848a90179761b64ffda108768bd96d4e5d2c7a76..89f65a67f39d727d43fcc72a7c591533c42e08dc 100644
+--- a/dist/error-constants.d.ts
++++ b/dist/error-constants.d.ts
+@@ -86,3 +86,4 @@ export declare const errorValues: {
+         message: string;
+     };
+ };
++//# sourceMappingURL=error-constants.d.ts.map
+\ No newline at end of file
+diff --git a/dist/error-constants.d.ts.map b/dist/error-constants.d.ts.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..8181d55d6612a9e172bd3c044da8f31ce7f6240b
+--- /dev/null
++++ b/dist/error-constants.d.ts.map
+@@ -0,0 +1 @@
++{"version":3,"file":"error-constants.d.ts","sourceRoot":"","sources":["../../src/error-constants.ts"],"names":[],"mappings":"AAAA,eAAO,MAAM,UAAU;;;;;;;;;;;;;;;;;;;;;CAqBtB,CAAC;AAGF,eAAO,MAAM,WAAW;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;CAmEvB,CAAC"}
+\ No newline at end of file
+diff --git a/dist/errors.d.ts b/dist/errors.d.ts
+index b4653125ce748f7da32ced278cc60f726c3cb6ee..c866a51b1399069678b559d4e7e586550d3b43e8 100644
+--- a/dist/errors.d.ts
++++ b/dist/errors.d.ts
+@@ -1,14 +1,14 @@
+ import { JsonRpcError, EthereumProviderError } from './classes';
+-import { DataWithOptionalCause } from './utils';
+-type EthereumErrorOptions<T extends DataWithOptionalCause> = {
++import type { DataWithOptionalCause, OptionalDataWithOptionalCause } from './utils';
++type EthereumErrorOptions<Data extends OptionalDataWithOptionalCause> = {
+     message?: string;
+-    data?: T;
++    data?: Data;
+ };
+-type ServerErrorOptions<T extends DataWithOptionalCause> = {
++type ServerErrorOptions<Data extends DataWithOptionalCause> = {
+     code: number;
+-} & EthereumErrorOptions<T>;
+-type CustomErrorArg<T extends DataWithOptionalCause> = ServerErrorOptions<T>;
+-type JsonRpcErrorsArg<T extends DataWithOptionalCause> = EthereumErrorOptions<T> | string;
++} & EthereumErrorOptions<Data>;
++type CustomErrorArg<Data extends DataWithOptionalCause> = ServerErrorOptions<Data>;
++type JsonRpcErrorsArg<Data extends OptionalDataWithOptionalCause> = EthereumErrorOptions<Data> | string;
+ export declare const rpcErrors: {
+     /**
+      * Get a JSON RPC 2.0 Parse (-32700) error.
+@@ -16,35 +16,35 @@ export declare const rpcErrors: {
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    parse: <T extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T> | undefined) => JsonRpcError<T>;
++    parse: <Data extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data> | undefined) => JsonRpcError<Data>;
+     /**
+      * Get a JSON RPC 2.0 Invalid Request (-32600) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    invalidRequest: <T_1 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_1> | undefined) => JsonRpcError<T_1>;
++    invalidRequest: <Data_1 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_1> | undefined) => JsonRpcError<Data_1>;
+     /**
+      * Get a JSON RPC 2.0 Invalid Params (-32602) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    invalidParams: <T_2 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_2> | undefined) => JsonRpcError<T_2>;
++    invalidParams: <Data_2 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_2> | undefined) => JsonRpcError<Data_2>;
+     /**
+      * Get a JSON RPC 2.0 Method Not Found (-32601) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    methodNotFound: <T_3 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_3> | undefined) => JsonRpcError<T_3>;
++    methodNotFound: <Data_3 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_3> | undefined) => JsonRpcError<Data_3>;
+     /**
+      * Get a JSON RPC 2.0 Internal (-32603) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    internal: <T_4 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_4> | undefined) => JsonRpcError<T_4>;
++    internal: <Data_4 extends OptionalDataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_4> | undefined) => JsonRpcError<Data_4>;
+     /**
+      * Get a JSON RPC 2.0 Server error.
+      * Permits integer error codes in the [ -32099 <= -32005 ] range.
+@@ -53,49 +53,49 @@ export declare const rpcErrors: {
+      * @param opts - The error options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    server: <T_5 extends DataWithOptionalCause>(opts: ServerErrorOptions<T_5>) => JsonRpcError<T_5>;
++    server: <Data_5 extends DataWithOptionalCause>(opts: ServerErrorOptions<Data_5>) => JsonRpcError<Data_5>;
+     /**
+      * Get an Ethereum JSON RPC Invalid Input (-32000) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    invalidInput: <T_6 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_6> | undefined) => JsonRpcError<T_6>;
++    invalidInput: <Data_6 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_6> | undefined) => JsonRpcError<Data_6>;
+     /**
+      * Get an Ethereum JSON RPC Resource Not Found (-32001) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    resourceNotFound: <T_7 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_7> | undefined) => JsonRpcError<T_7>;
++    resourceNotFound: <Data_7 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_7> | undefined) => JsonRpcError<Data_7>;
+     /**
+      * Get an Ethereum JSON RPC Resource Unavailable (-32002) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    resourceUnavailable: <T_8 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_8> | undefined) => JsonRpcError<T_8>;
++    resourceUnavailable: <Data_8 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_8> | undefined) => JsonRpcError<Data_8>;
+     /**
+      * Get an Ethereum JSON RPC Transaction Rejected (-32003) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    transactionRejected: <T_9 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_9> | undefined) => JsonRpcError<T_9>;
++    transactionRejected: <Data_9 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_9> | undefined) => JsonRpcError<Data_9>;
+     /**
+      * Get an Ethereum JSON RPC Method Not Supported (-32004) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    methodNotSupported: <T_10 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_10> | undefined) => JsonRpcError<T_10>;
++    methodNotSupported: <Data_10 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_10> | undefined) => JsonRpcError<Data_10>;
+     /**
+      * Get an Ethereum JSON RPC Limit Exceeded (-32005) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link JsonRpcError} class.
+      */
+-    limitExceeded: <T_11 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_11> | undefined) => JsonRpcError<T_11>;
++    limitExceeded: <Data_11 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_11> | undefined) => JsonRpcError<Data_11>;
+ };
+ export declare const providerErrors: {
+     /**
+@@ -104,41 +104,42 @@ export declare const providerErrors: {
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link EthereumProviderError} class.
+      */
+-    userRejectedRequest: <T extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T> | undefined) => EthereumProviderError<T>;
++    userRejectedRequest: <Data extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data> | undefined) => EthereumProviderError<Data>;
+     /**
+      * Get an Ethereum Provider Unauthorized (4100) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link EthereumProviderError} class.
+      */
+-    unauthorized: <T_1 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_1> | undefined) => EthereumProviderError<T_1>;
++    unauthorized: <Data_1 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_1> | undefined) => EthereumProviderError<Data_1>;
+     /**
+      * Get an Ethereum Provider Unsupported Method (4200) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link EthereumProviderError} class.
+      */
+-    unsupportedMethod: <T_2 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_2> | undefined) => EthereumProviderError<T_2>;
++    unsupportedMethod: <Data_2 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_2> | undefined) => EthereumProviderError<Data_2>;
+     /**
+      * Get an Ethereum Provider Not Connected (4900) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link EthereumProviderError} class.
+      */
+-    disconnected: <T_3 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_3> | undefined) => EthereumProviderError<T_3>;
++    disconnected: <Data_3 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_3> | undefined) => EthereumProviderError<Data_3>;
+     /**
+      * Get an Ethereum Provider Chain Not Connected (4901) error.
+      *
+      * @param arg - The error message or options bag.
+      * @returns An instance of the {@link EthereumProviderError} class.
+      */
+-    chainDisconnected: <T_4 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<T_4> | undefined) => EthereumProviderError<T_4>;
++    chainDisconnected: <Data_4 extends DataWithOptionalCause>(arg?: JsonRpcErrorsArg<Data_4> | undefined) => EthereumProviderError<Data_4>;
+     /**
+      * Get a custom Ethereum Provider error.
+      *
+      * @param opts - The error options bag.
+      * @returns An instance of the {@link EthereumProviderError} class.
+      */
+-    custom: <T_5 extends DataWithOptionalCause>(opts: CustomErrorArg<T_5>) => EthereumProviderError<T_5>;
++    custom: <Data_5 extends DataWithOptionalCause>(opts: CustomErrorArg<Data_5>) => EthereumProviderError<Data_5>;
+ };
+ export {};
++//# sourceMappingURL=errors.d.ts.map
+\ No newline at end of file
+diff --git a/dist/errors.d.ts.map b/dist/errors.d.ts.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..905ecf6db600e53223dd4924c369dfe6d6f0fc45
+--- /dev/null
++++ b/dist/errors.d.ts.map
+@@ -0,0 +1 @@
++{"version":3,"file":"errors.d.ts","sourceRoot":"","sources":["../../src/errors.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,qBAAqB,EAAE,MAAM,WAAW,CAAC;AAEhE,OAAO,KAAK,EAAE,qBAAqB,EAAE,6BAA6B,EAAE,MAAM,SAAS,CAAC;AAGpF,KAAK,oBAAoB,CAAC,IAAI,SAAS,6BAA6B,IAAI;IACtE,OAAO,CAAC,EAAE,MAAM,CAAC;IACjB,IAAI,CAAC,EAAE,IAAI,CAAC;CACb,CAAC;AAEF,KAAK,kBAAkB,CAAC,IAAI,SAAS,qBAAqB,IAAI;IAC5D,IAAI,EAAE,MAAM,CAAC;CACd,GAAG,oBAAoB,CAAC,IAAI,CAAC,CAAC;AAE/B,KAAK,cAAc,CAAC,IAAI,SAAS,qBAAqB,IACpD,kBAAkB,CAAC,IAAI,CAAC,CAAC;AAE3B,KAAK,gBAAgB,CAAC,IAAI,SAAS,6BAA6B,IAC5D,oBAAoB,CAAC,IAAI,CAAC,GAC1B,MAAM,CAAC;AAEX,eAAO,MAAM,SAAS;IACpB;;;;;OAKG;;IAIH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;;;OAOG;;IAkBH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;OAKG;;IAKH;;;;;OAKG;;CAIJ,CAAC;AAEF,eAAO,MAAM,cAAc;IACzB;;;;;OAKG;;IAOH;;;;;OAKG;;IAOH;;;;;OAKG;;IAOH;;;;;OAKG;;IAOH;;;;;OAKG;;IAOH;;;;;OAKG;;CAeJ,CAAC"}
+\ No newline at end of file
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 9a28c4a55898eb20b2bde225eb5ddb61f767faf1..aeec7abf5aa8efdc4bdc42f33a62585dbe85f755 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -3,3 +3,4 @@ export { serializeCause, serializeError, getMessageFromCode } from './utils';
+ export type { DataWithOptionalCause } from './utils';
+ export { rpcErrors, providerErrors } from './errors';
+ export { errorCodes } from './error-constants';
++//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
+diff --git a/dist/index.d.ts.map b/dist/index.d.ts.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..de9a76f95d32507790e23214b6aac52a0ba8c36d
+--- /dev/null
++++ b/dist/index.d.ts.map
+@@ -0,0 +1 @@
++{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../src/index.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,qBAAqB,EAAE,MAAM,WAAW,CAAC;AAChE,OAAO,EAAE,cAAc,EAAE,cAAc,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAC7E,YAAY,EAAE,qBAAqB,EAAE,MAAM,SAAS,CAAC;AACrD,OAAO,EAAE,SAAS,EAAE,cAAc,EAAE,MAAM,UAAU,CAAC;AACrD,OAAO,EAAE,UAAU,EAAE,MAAM,mBAAmB,CAAC"}
+\ No newline at end of file
+diff --git a/dist/utils.d.ts b/dist/utils.d.ts
+index f2b6a97b759c7b451c7310813efe92c75a9a9552..708c96206646881a6a4e2ab8e4afec18af592135 100644
+--- a/dist/utils.d.ts
++++ b/dist/utils.d.ts
+@@ -1,4 +1,4 @@
+-import { Json, JsonRpcError as SerializedJsonRpcError } from '@metamask/utils';
++import type { Json, JsonRpcError as SerializedJsonRpcError } from '@metamask/utils';
+ /**
+  * A data object, that must be either:
+  *
+@@ -10,6 +10,13 @@ export type DataWithOptionalCause = Json | {
+     [key: string]: Json | unknown;
+     cause: unknown;
+ };
++/**
++ * A data object, that must be either:
++ *
++ * - A valid DataWithOptionalCause value.
++ * - undefined.
++ */
++export type OptionalDataWithOptionalCause = undefined | DataWithOptionalCause;
+ export declare const JSON_RPC_SERVER_ERROR_MESSAGE = "Unspecified server error.";
+ /**
+  * Gets the message for a given code, or a fallback message if the code has
+@@ -54,3 +61,4 @@ export declare function serializeError(error: unknown, { fallbackError, shouldIn
+  * @returns A JSON-serializable object containing as much information about the original error as possible.
+  */
+ export declare function serializeCause(error: unknown): Json;
++//# sourceMappingURL=utils.d.ts.map
+\ No newline at end of file
+diff --git a/dist/utils.d.ts.map b/dist/utils.d.ts.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..f22be5f27454e41a590ef1b462e131020ab45384
+--- /dev/null
++++ b/dist/utils.d.ts.map
+@@ -0,0 +1 @@
++{"version":3,"file":"utils.d.ts","sourceRoot":"","sources":["../../src/utils.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EACV,IAAI,EACJ,YAAY,IAAI,sBAAsB,EAEvC,MAAM,iBAAiB,CAAC;AAUzB;;;;;;GAMG;AACH,MAAM,MAAM,qBAAqB,GAC7B,IAAI,GACJ;IAIE,CAAC,GAAG,EAAE,MAAM,GAAG,IAAI,GAAG,OAAO,CAAC;IAC9B,KAAK,EAAE,OAAO,CAAC;CAChB,CAAC;AAEN;;;;;GAKG;AACH,MAAM,MAAM,6BAA6B,GAAG,SAAS,GAAG,qBAAqB,CAAC;AAU9E,eAAO,MAAM,6BAA6B,8BAA8B,CAAC;AAIzE;;;;;;;;;GASG;AACH,wBAAgB,kBAAkB,CAChC,IAAI,EAAE,OAAO,EACb,eAAe,GAAE,MAAyB,GACzC,MAAM,CAaR;AAED;;;;;;GAMG;AACH,wBAAgB,WAAW,CAAC,IAAI,EAAE,OAAO,GAAG,IAAI,IAAI,MAAM,CAEzD;AAED;;;;;;;;;;;;GAYG;AACH,wBAAgB,cAAc,CAC5B,KAAK,EAAE,OAAO,EACd,EAAE,aAA8B,EAAE,kBAAyB,EAAE;;;CAAK,GACjE,sBAAsB,CAcxB;AA+CD;;;;;GAKG;AACH,wBAAgB,cAAc,CAAC,KAAK,EAAE,OAAO,GAAG,IAAI,CAmBnD"}
+\ No newline at end of file
