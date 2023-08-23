@@ -1066,11 +1066,11 @@ __metadata:
 
 "@metamask/rpc-errors@patch:@metamask/rpc-errors@npm%3A5.1.1#./.yarn/patches/@metamask-rpc-errors-npm-5.1.1-dc76c26803.patch::locator=%40metamask%2Fjson-rpc-engine%40workspace%3A.":
   version: 5.1.1
-  resolution: "@metamask/rpc-errors@patch:@metamask/rpc-errors@npm%3A5.1.1#./.yarn/patches/@metamask-rpc-errors-npm-5.1.1-dc76c26803.patch::version=5.1.1&hash=b699ed&locator=%40metamask%2Fjson-rpc-engine%40workspace%3A."
+  resolution: "@metamask/rpc-errors@patch:@metamask/rpc-errors@npm%3A5.1.1#./.yarn/patches/@metamask-rpc-errors-npm-5.1.1-dc76c26803.patch::version=5.1.1&hash=83170c&locator=%40metamask%2Fjson-rpc-engine%40workspace%3A."
   dependencies:
     "@metamask/utils": ^5.0.0
     fast-safe-stringify: ^2.0.6
-  checksum: 76d0e5c0e9c49c69881b56db3a5ab8d3240db1294089cd9daff14a145ae1dd014653ff48aa6976f6d4a79e2b9603726c221f07be6a36fae1165a11545eb82455
+  checksum: 48f72d7c9f2a977bdf37a5e48c5cbbe42884b79892d9c0286a28eb2f4975602c70b10e6fe8111208eaf59a7523947b977794e85462a833c0524bebafaf7de85d
   languageName: node
   linkType: hard
 
