@@ -66,7 +66,7 @@ export function createAsyncMiddleware<
 
       // We pass a return handler to next(). When it is called by the engine,
       // the consumer's async middleware will resume executing.
-      // eslint-disable-next-line node/callback-return
+      // eslint-disable-next-line n/callback-return
       next((runReturnHandlersCallback) => {
         // This callback comes from JsonRpcEngine._runReturnHandlers
         returnHandlerCallback = runReturnHandlersCallback;

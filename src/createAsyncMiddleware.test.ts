@@ -33,7 +33,7 @@ describe('createAsyncMiddleware', () => {
     engine.push(
       createAsyncMiddleware(async (_request, response, next) => {
         expect(response.result).toBeUndefined();
-        await next(); // eslint-disable-line node/callback-return
+        await next(); // eslint-disable-line n/callback-return
         expect(response.result).toBe(1234);
         // override value
         response.result = 42; // eslint-disable-line require-atomic-updates
@@ -87,7 +87,7 @@ describe('createAsyncMiddleware', () => {
 
     engine.push(
       createAsyncMiddleware(async (_request, _response, next) => {
-        await next(); // eslint-disable-line node/callback-return
+        await next(); // eslint-disable-line n/callback-return
         throw thrownError;
       }),
     );
