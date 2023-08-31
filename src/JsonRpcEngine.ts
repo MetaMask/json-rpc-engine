@@ -351,6 +351,8 @@ export class JsonRpcEngine extends SafeEventEmitter {
 
         // Excepting notifications, there will always be a response, and it will
         // always have any error that is caught and propagated.
+        // TODO: Should just return instead of resolve here? Or fix type.
+        // eslint-disable-next-line promise/no-multiple-resolved
         resolve(res);
       }).catch(reject);
     });
