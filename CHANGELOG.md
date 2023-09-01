@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.1]
+### Uncategorized
+- deps: @metamask/utils@^7.0.0->^8.1.0, @metamask/rpc-errors@^5.0.0->^6.0.0 ([#162](https://github.com/MetaMask/json-rpc-engine/pull/162))
+- Bump @metamask/auto-changelog from 3.1.0 to 3.2.0 ([#157](https://github.com/MetaMask/json-rpc-engine/pull/157))
+- Bump @metamask/utils from 5.0.2 to 7.0.0 ([#158](https://github.com/MetaMask/json-rpc-engine/pull/158))
+
 ## [7.1.0]
 ### Changed
 - Bumped `@metamask/safe-event-emitter` from `^2.0.0` to `^3.0.0` ([#148](https://github.com/MetaMask/json-rpc-engine/pull/148))
@@ -74,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     This change may affect consumers that depend on the eager execution of middleware _during_ request processing, _outside of_ middleware functions and request handlers.
     - In general, it is a bad practice to work with state that depends on middleware execution, while the middleware are executing.
 
-[Unreleased]: https://github.com/MetaMask/json-rpc-engine/compare/v7.1.0...HEAD
+[Unreleased]: https://github.com/MetaMask/json-rpc-engine/compare/v7.1.1...HEAD
+[7.1.1]: https://github.com/MetaMask/json-rpc-engine/compare/v7.1.0...v7.1.1
 [7.1.0]: https://github.com/MetaMask/json-rpc-engine/compare/v7.0.0...v7.1.0
 [7.0.0]: https://github.com/MetaMask/json-rpc-engine/compare/v6.1.0...v7.0.0
 [6.1.0]: https://github.com/MetaMask/json-rpc-engine/compare/v6.0.0...v6.1.0
