@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [7.1.1]
-### Uncategorized
-- deps: @metamask/utils@^7.0.0->^8.1.0, @metamask/rpc-errors@^5.0.0->^6.0.0 ([#162](https://github.com/MetaMask/json-rpc-engine/pull/162))
-- Bump @metamask/auto-changelog from 3.1.0 to 3.2.0 ([#157](https://github.com/MetaMask/json-rpc-engine/pull/157))
-- Bump @metamask/utils from 5.0.2 to 7.0.0 ([#158](https://github.com/MetaMask/json-rpc-engine/pull/158))
+### Changed
+- Bumped `@metamask/utils` from `^7.0.0` to `^8.1.0` ([#162](https://github.com/MetaMask/json-rpc-engine/pull/162))
+- Bumped `@metamask/rpc-errors` from `^5.0.0` to `^6.0.0` ([#162](https://github.com/MetaMask/json-rpc-engine/pull/162))
 
 ## [7.1.0]
 ### Changed
