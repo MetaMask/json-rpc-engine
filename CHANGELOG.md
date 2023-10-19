@@ -7,13 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [7.2.0]
-### Uncategorized
-- Bump @babel/traverse from 7.21.4 to 7.23.2 ([#173](https://github.com/MetaMask/json-rpc-engine/pull/173))
-- applied eslint rules from core monorepo and fixed the errors ([#172](https://github.com/MetaMask/json-rpc-engine/pull/172))
-- Bump @metamask/rpc-errors from 6.0.0 to 6.1.0 ([#171](https://github.com/MetaMask/json-rpc-engine/pull/171))
-- Bump postcss from 8.4.21 to 8.4.31 ([#170](https://github.com/MetaMask/json-rpc-engine/pull/170))
-- bump eslint packages ([#169](https://github.com/MetaMask/json-rpc-engine/pull/169))
-- Bump @metamask/auto-changelog from 3.2.0 to 3.3.0 ([#168](https://github.com/MetaMask/json-rpc-engine/pull/168))
+### Added
+- Applied eslint rules from core monorepo ([#172](https://github.com/MetaMask/json-rpc-engine/pull/172))
 
 ## [7.1.1]
 ### Changed
