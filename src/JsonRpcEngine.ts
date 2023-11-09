@@ -34,7 +34,7 @@ export type JsonRpcMiddleware<
     res: PendingJsonRpcResponse<Result>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
-  ): void;
+  ): void | Promise<void>;
   destroy?: () => void | Promise<void>;
 };
 
@@ -534,49 +534,55 @@ export class JsonRpcEngine extends SafeEventEmitter {
     middleware: JsonRpcMiddleware<JsonRpcParams, Json>,
     returnHandlers: JsonRpcEngineReturnHandler[],
   ): Promise<[unknown, boolean]> {
-    return new Promise((resolve) => {
-      const end: JsonRpcEngineEndCallback = (error?: unknown) => {
-        const parsedError = error || response.error;
-        if (parsedError) {
-          response.error = serializeError(parsedError);
-        }
-        // True indicates that the request should end
-        resolve([parsedError, true]);
-      };
+    let resolve: (value: [unknown, boolean]) => void;
+    const middlewareCallbackPromise = new Promise<[unknown, boolean]>(
+      (_resolve) => {
+        resolve = _resolve;
+      },
+    );
 
-      const next: JsonRpcEngineNextCallback = (
-        returnHandler?: JsonRpcEngineReturnHandler,
-      ) => {
-        if (response.error) {
-          end(response.error);
-        } else {
-          if (returnHandler) {
-            if (typeof returnHandler !== 'function') {
-              end(
-                new JsonRpcError(
-                  errorCodes.rpc.internal,
-                  `JsonRpcEngine: "next" return handlers must be functions. ` +
-                    `Received "${typeof returnHandler}" for request:\n${jsonify(
-                      request,
-                    )}`,
-                  { request: request as Json },
-                ),
-              );
-            }
-            returnHandlers.push(returnHandler);
-          }
-
-          // False indicates that the request should not end
-          resolve([null, false]);
-        }
-      };
-
-      try {
-        middleware(request, response, next, end);
-      } catch (error: any) {
-        end(error);
+    const end: JsonRpcEngineEndCallback = (error?: unknown) => {
+      const parsedError = error || response.error;
+      if (parsedError) {
+        response.error = serializeError(parsedError);
       }
-    });
+      // True indicates that the request should end
+      resolve([parsedError, true]);
+    };
+
+    const next: JsonRpcEngineNextCallback = (
+      returnHandler?: JsonRpcEngineReturnHandler,
+    ) => {
+      if (response.error) {
+        return end(response.error);
+      }
+
+      if (returnHandler) {
+        if (typeof returnHandler !== 'function') {
+          return end(
+            new JsonRpcError(
+              errorCodes.rpc.internal,
+              `JsonRpcEngine: "next" return handlers must be functions. ` +
+                `Received "${typeof returnHandler}" for request:\n${jsonify(
+                  request,
+                )}`,
+              { request: request as Json },
+            ),
+          );
+        }
+        returnHandlers.push(returnHandler);
+      }
+
+      // False indicates that the request should not end
+      return resolve([null, false]);
+    };
+
+    try {
+      await middleware(request, response, next, end);
+    } catch (error: any) {
+      end(error);
+    }
+    return middlewareCallbackPromise;
   }
 
   /**

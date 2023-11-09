@@ -534,8 +534,10 @@ describe('JsonRpcEngine', () => {
       });
     });
 
-    engine.push(function (_request, _response, next, _end) {
+    // Async middleware function
+    engine.push(async function (_request, _response, next, _end) {
       events.push('2-next');
+      await delay();
       next(function (callback) {
         events.push('2-return');
         callback();
@@ -577,6 +579,33 @@ describe('JsonRpcEngine', () => {
 
     engine.push(function (_request, _response, _next, end) {
       end(new Error('boom'));
+    });
+
+    const payload = { id: 1, jsonrpc, method: 'hello' };
+
+    await new Promise<void>((resolve) => {
+      engine.handle(payload, (error, _response) => {
+        expect(error).toBeDefined();
+        expect(sawNextReturnHandlerCalled).toBe(true);
+        resolve();
+      });
+    });
+  });
+
+  it('calls back next handler even if async middleware rejects', async () => {
+    const engine = new JsonRpcEngine();
+
+    let sawNextReturnHandlerCalled = false;
+
+    engine.push(function (_req, _res, next, _end) {
+      next(function (callback) {
+        sawNextReturnHandlerCalled = true;
+        callback();
+      });
+    });
+
+    engine.push(async function (_req, _res, _next, _end) {
+      throw new Error('boom');
     });
 
     const payload = { id: 1, jsonrpc, method: 'hello' };
@@ -708,3 +737,14 @@ describe('JsonRpcEngine', () => {
     });
   });
 });
+
+/**
+ * Delay for a number of milliseconds.
+ *
+ * @param ms - The number of milliseconds to delay.
+ */
+async function delay(ms = 1) {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => resolve(), ms);
+  });
+}
