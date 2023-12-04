@@ -128,11 +128,23 @@ export class JsonRpcEngine extends SafeEventEmitter {
    *
    * @param middleware - The middleware function to add.
    */
-  push<Params extends JsonRpcParams, Result extends Json>(
+  addMiddleware<Params extends JsonRpcParams, Result extends Json>(
     middleware: JsonRpcMiddleware<Params, Result>,
   ): void {
     this.#assertIsNotDestroyed();
     this.#middleware.push(middleware as JsonRpcMiddleware<JsonRpcParams, Json>);
+  }
+
+  /**
+   * Add a middleware function to the engine's middleware stack.
+   *
+   * @deprecated Use {@link JsonRpcEngine.addMiddleware} instead.
+   * @param middleware - The middleware function to add.
+   */
+  push<Params extends JsonRpcParams, Result extends Json>(
+    middleware: JsonRpcMiddleware<Params, Result>,
+  ): void {
+    this.addMiddleware(middleware);
   }
 
   /**
